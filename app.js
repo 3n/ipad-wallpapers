@@ -1,4 +1,8 @@
 window.addEvent('domready', function(){
+  $('showcase-wrapper').addEvent('click', function(){ 
+    this.removeClass('showing'); 
+  });
+  
   new Request.JSONP({
     url : "http://api.flickr.com/services/rest/",
     globalFunction : 'jsonFlickrApi',
@@ -20,7 +24,8 @@ window.addEvent('domready', function(){
         .thumbnail(240,240,'thumb')
         .addEvent('click', function(){
           var img = this.getFirst();
-          img.set('src', img.get('src').replace('_m.jpg','_b.jpg'));
+          $('showcase-wrapper').addClass('showing').setStyle('top', window.getScrollTop());
+          $('showcase-image').set('src', img.get('src').replace('_m.jpg','_b.jpg'));
         });
     }
   }).send();
