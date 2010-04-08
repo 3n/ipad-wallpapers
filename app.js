@@ -20,13 +20,12 @@ window.addEvent('domready', function(){
         }).reverse()
       );
       
-      $('gallery').getChildren()
-        .thumbnail(240,240,'thumb')
-        .addEvent('click', function(){
-          var img = this.getFirst();
-          $('showcase-wrapper').addClass('showing').setStyle('top', window.getScrollTop());
-          $('showcase-image').set('src', img.get('src').replace('_m.jpg','_b.jpg'));
-        });
+      $('gallery').getChildren().thumbnail(240,240,'thumb');
+      $('gallery').addEvent('click:relay(.thumb)', function(){
+        var img = this.getFirst();
+        $('showcase-wrapper').addClass('showing').setStyle('top', window.getScrollTop());
+        $('showcase-image').set('src', img.get('src').replace('_m.jpg','_b.jpg'));
+      });
     }
   }).send();
 });
