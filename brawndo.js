@@ -293,6 +293,175 @@ function $unlink(object){
 /*
 ---
 
+script: Browser.js
+
+description: The Browser Core. Contains Browser initialization, Window and Document, and the Browser Hash.
+
+license: MIT-style license.
+
+requires: 
+- /Native
+- /$util
+
+provides: [Browser, Window, Document, $exec]
+
+...
+*/
+
+var Browser = $merge({
+
+	Engine: {name: 'unknown', version: 0},
+
+	Platform: {name: (window.orientation != undefined) ? 'ipod' : (navigator.platform.match(/mac|win|linux/i) || ['other'])[0].toLowerCase()},
+
+	Features: {xpath: !!(document.evaluate), air: !!(window.runtime), query: !!(document.querySelector)},
+
+	Plugins: {},
+
+	Engines: {
+
+		presto: function(){
+			return (!window.opera) ? false : ((arguments.callee.caller) ? 960 : ((document.getElementsByClassName) ? 950 : 925));
+		},
+
+		trident: function(){
+			return (!window.ActiveXObject) ? false : ((window.XMLHttpRequest) ? ((document.querySelectorAll) ? 6 : 5) : 4);
+		},
+
+		webkit: function(){
+			return (navigator.taintEnabled) ? false : ((Browser.Features.xpath) ? ((Browser.Features.query) ? 525 : 420) : 419);
+		},
+
+		gecko: function(){
+			return (!document.getBoxObjectFor && window.mozInnerScreenX == null) ? false : ((document.getElementsByClassName) ? 19 : 18);
+		}
+
+	}
+
+}, Browser || {});
+
+Browser.Platform[Browser.Platform.name] = true;
+
+Browser.detect = function(){
+
+	for (var engine in this.Engines){
+		var version = this.Engines[engine]();
+		if (version){
+			this.Engine = {name: engine, version: version};
+			this.Engine[engine] = this.Engine[engine + version] = true;
+			break;
+		}
+	}
+
+	return {name: engine, version: version};
+
+};
+
+Browser.detect();
+
+Browser.Request = function(){
+	return $try(function(){
+		return new XMLHttpRequest();
+	}, function(){
+		return new ActiveXObject('MSXML2.XMLHTTP');
+	}, function(){
+		return new ActiveXObject('Microsoft.XMLHTTP');
+	});
+};
+
+Browser.Features.xhr = !!(Browser.Request());
+
+Browser.Plugins.Flash = (function(){
+	var version = ($try(function(){
+		return navigator.plugins['Shockwave Flash'].description;
+	}, function(){
+		return new ActiveXObject('ShockwaveFlash.ShockwaveFlash').GetVariable('$version');
+	}) || '0 r0').match(/\d+/g);
+	return {version: parseInt(version[0] || 0 + '.' + version[1], 10) || 0, build: parseInt(version[2], 10) || 0};
+})();
+
+function $exec(text){
+	if (!text) return text;
+	if (window.execScript){
+		window.execScript(text);
+	} else {
+		var script = document.createElement('script');
+		script.setAttribute('type', 'text/javascript');
+		script[(Browser.Engine.webkit && Browser.Engine.version < 420) ? 'innerText' : 'text'] = text;
+		document.head.appendChild(script);
+		document.head.removeChild(script);
+	}
+	return text;
+};
+
+Native.UID = 1;
+
+var $uid = (Browser.Engine.trident) ? function(item){
+	return (item.uid || (item.uid = [Native.UID++]))[0];
+} : function(item){
+	return item.uid || (item.uid = Native.UID++);
+};
+
+var Window = new Native({
+
+	name: 'Window',
+
+	legacy: (Browser.Engine.trident) ? null: window.Window,
+
+	initialize: function(win){
+		$uid(win);
+		if (!win.Element){
+			win.Element = $empty;
+			if (Browser.Engine.webkit) win.document.createElement("iframe"); //fixes safari 2
+			win.Element.prototype = (Browser.Engine.webkit) ? window["[[DOMElement.prototype]]"] : {};
+		}
+		win.document.window = win;
+		return $extend(win, Window.Prototype);
+	},
+
+	afterImplement: function(property, value){
+		window[property] = Window.Prototype[property] = value;
+	}
+
+});
+
+Window.Prototype = {$family: {name: 'window'}};
+
+new Window(window);
+
+var Document = new Native({
+
+	name: 'Document',
+
+	legacy: (Browser.Engine.trident) ? null: window.Document,
+
+	initialize: function(doc){
+		$uid(doc);
+		doc.head = doc.getElementsByTagName('head')[0];
+		doc.html = doc.getElementsByTagName('html')[0];
+		if (Browser.Engine.trident && Browser.Engine.version <= 4) $try(function(){
+			doc.execCommand("BackgroundImageCache", false, true);
+		});
+		if (Browser.Engine.trident) doc.window.attachEvent('onunload', function(){
+			doc.window.detachEvent('onunload', arguments.callee);
+			doc.head = doc.html = doc.window = null;
+		});
+		return $extend(doc, Document.Prototype);
+	},
+
+	afterImplement: function(property, value){
+		document[property] = Document.Prototype[property] = value;
+	}
+
+});
+
+Document.Prototype = {$family: {name: 'document'}};
+
+new Document(document);
+
+/*
+---
+
 script: Array.js
 
 description: Contains Array Prototypes like each, contains, and erase.
@@ -806,558 +975,6 @@ Hash.implement({
 });
 
 Hash.alias({keyOf: 'indexOf', hasValue: 'contains'});
-
-/*
----
-
-script: Class.js
-
-description: Contains the Class Function for easily creating, extending, and implementing reusable Classes.
-
-license: MIT-style license.
-
-requires:
-- /$util
-- /Native
-- /Array
-- /String
-- /Function
-- /Number
-- /Hash
-
-provides: [Class]
-
-...
-*/
-
-function Class(params){
-	
-	if (params instanceof Function) params = {initialize: params};
-	
-	var newClass = function(){
-		Object.reset(this);
-		if (newClass._prototyping) return this;
-		this._current = $empty;
-		var value = (this.initialize) ? this.initialize.apply(this, arguments) : this;
-		delete this._current; delete this.caller;
-		return value;
-	}.extend(this);
-	
-	newClass.implement(params);
-	
-	newClass.constructor = Class;
-	newClass.prototype.constructor = newClass;
-
-	return newClass;
-
-};
-
-Function.prototype.protect = function(){
-	this._protected = true;
-	return this;
-};
-
-Object.reset = function(object, key){
-		
-	if (key == null){
-		for (var p in object) Object.reset(object, p);
-		return object;
-	}
-	
-	delete object[key];
-	
-	switch ($type(object[key])){
-		case 'object':
-			var F = function(){};
-			F.prototype = object[key];
-			var i = new F;
-			object[key] = Object.reset(i);
-		break;
-		case 'array': object[key] = $unlink(object[key]); break;
-	}
-	
-	return object;
-	
-};
-
-new Native({name: 'Class', initialize: Class}).extend({
-
-	instantiate: function(F){
-		F._prototyping = true;
-		var proto = new F;
-		delete F._prototyping;
-		return proto;
-	},
-	
-	wrap: function(self, key, method){
-		if (method._origin) method = method._origin;
-		
-		return function(){
-			if (method._protected && this._current == null) throw new Error('The method "' + key + '" cannot be called.');
-			var caller = this.caller, current = this._current;
-			this.caller = current; this._current = arguments.callee;
-			var result = method.apply(this, arguments);
-			this._current = current; this.caller = caller;
-			return result;
-		}.extend({_owner: self, _origin: method, _name: key});
-
-	}
-	
-});
-
-Class.implement({
-	
-	implement: function(key, value){
-		
-		if ($type(key) == 'object'){
-			for (var p in key) this.implement(p, key[p]);
-			return this;
-		}
-		
-		var mutator = Class.Mutators[key];
-		
-		if (mutator){
-			value = mutator.call(this, value);
-			if (value == null) return this;
-		}
-		
-		var proto = this.prototype;
-
-		switch ($type(value)){
-			
-			case 'function':
-				if (value._hidden) return this;
-				proto[key] = Class.wrap(this, key, value);
-			break;
-			
-			case 'object':
-				var previous = proto[key];
-				if ($type(previous) == 'object') $mixin(previous, value);
-				else proto[key] = $unlink(value);
-			break;
-			
-			case 'array':
-				proto[key] = $unlink(value);
-			break;
-			
-			default: proto[key] = value;
-
-		}
-		
-		return this;
-
-	}
-	
-});
-
-Class.Mutators = {
-	
-	Extends: function(parent){
-
-		this.parent = parent;
-		this.prototype = Class.instantiate(parent);
-
-		this.implement('parent', function(){
-			var name = this.caller._name, previous = this.caller._owner.parent.prototype[name];
-			if (!previous) throw new Error('The method "' + name + '" has no parent.');
-			return previous.apply(this, arguments);
-		}.protect());
-
-	},
-
-	Implements: function(items){
-		$splat(items).each(function(item){
-			if (item instanceof Function) item = Class.instantiate(item);
-			this.implement(item);
-		}, this);
-
-	}
-	
-};
-
-/*
----
-
-script: Class.Extras.js
-
-description: Contains Utility Classes that can be implemented into your own Classes to ease the execution of many common tasks.
-
-license: MIT-style license.
-
-requires:
-- /Class
-
-provides: [Chain, Events, Options]
-
-...
-*/
-
-var Chain = new Class({
-
-	$chain: [],
-
-	chain: function(){
-		this.$chain.extend(Array.flatten(arguments));
-		return this;
-	},
-
-	callChain: function(){
-		return (this.$chain.length) ? this.$chain.shift().apply(this, arguments) : false;
-	},
-
-	clearChain: function(){
-		this.$chain.empty();
-		return this;
-	}
-
-});
-
-var Events = new Class({
-
-	$events: {},
-
-	addEvent: function(type, fn, internal){
-		type = Events.removeOn(type);
-		if (fn != $empty){
-			this.$events[type] = this.$events[type] || [];
-			this.$events[type].include(fn);
-			if (internal) fn.internal = true;
-		}
-		return this;
-	},
-
-	addEvents: function(events){
-		for (var type in events) this.addEvent(type, events[type]);
-		return this;
-	},
-
-	fireEvent: function(type, args, delay){
-		type = Events.removeOn(type);
-		if (!this.$events || !this.$events[type]) return this;
-		this.$events[type].each(function(fn){
-			fn.create({'bind': this, 'delay': delay, 'arguments': args})();
-		}, this);
-		return this;
-	},
-
-	removeEvent: function(type, fn){
-		type = Events.removeOn(type);
-		if (!this.$events[type]) return this;
-		if (!fn.internal) this.$events[type].erase(fn);
-		return this;
-	},
-
-	removeEvents: function(events){
-		var type;
-		if ($type(events) == 'object'){
-			for (type in events) this.removeEvent(type, events[type]);
-			return this;
-		}
-		if (events) events = Events.removeOn(events);
-		for (type in this.$events){
-			if (events && events != type) continue;
-			var fns = this.$events[type];
-			for (var i = fns.length; i--; i) this.removeEvent(type, fns[i]);
-		}
-		return this;
-	}
-
-});
-
-Events.removeOn = function(string){
-	return string.replace(/^on([A-Z])/, function(full, first){
-		return first.toLowerCase();
-	});
-};
-
-var Options = new Class({
-
-	setOptions: function(){
-		this.options = $merge.run([this.options].extend(arguments));
-		if (!this.addEvent) return this;
-		for (var option in this.options){
-			if ($type(this.options[option]) != 'function' || !(/^on[A-Z]/).test(option)) continue;
-			this.addEvent(option, this.options[option]);
-			delete this.options[option];
-		}
-		return this;
-	}
-
-});
-
-/*
----
-
-script: More.js
-
-description: MooTools More
-
-license: MIT-style license
-
-authors:
-- Guillermo Rauch
-- Thomas Aylott
-- Scott Kyle
-
-requires:
-- core:1.2.4/MooTools
-
-provides: [MooTools.More]
-
-...
-*/
-
-MooTools.More = {
-	'version': '1.2.4.3dev',
-	'build': '%build%'
-};
-/*
----
-
-script: Log.js
-
-description: Provides basic logging functionality for plugins to implement.
-
-license: MIT-style license
-
-authors:
-- Guillermo Rauch
-- Thomas Aylott
-- Scott Kyle
-
-requires:
-- core:1.2.4/Class
-- /MooTools.More
-
-provides: [Log]
-
-...
-*/
-
-(function(){
-
-var global = this;
-
-var log = function(){
-	if (global.console && console.log){
-		try {
-			console.log.apply(console, arguments);
-		} catch(e) {
-			console.log(Array.slice(arguments));
-		}
-	} else {
-		Log.logged.push(arguments);
-	}
-	return this;
-};
-
-var disabled = function(){
-	this.logged.push(arguments);
-	return this;
-};
-
-this.Log = new Class({
-	
-	logged: [],
-	
-	log: disabled,
-	
-	resetLog: function(){
-		this.logged.empty();
-		return this;
-	},
-
-	enableLog: function(){
-		this.log = log;
-		this.logged.each(function(args){
-			this.log.apply(this, args);
-		}, this);
-		return this.resetLog();
-	},
-
-	disableLog: function(){
-		this.log = disabled;
-		return this;
-	}
-	
-});
-
-Log.extend(new Log).enableLog();
-
-// legacy
-Log.logger = function(){
-	return this.log.apply(this, arguments);
-};
-
-})();
-/*
----
-
-script: Browser.js
-
-description: The Browser Core. Contains Browser initialization, Window and Document, and the Browser Hash.
-
-license: MIT-style license.
-
-requires: 
-- /Native
-- /$util
-
-provides: [Browser, Window, Document, $exec]
-
-...
-*/
-
-var Browser = $merge({
-
-	Engine: {name: 'unknown', version: 0},
-
-	Platform: {name: (window.orientation != undefined) ? 'ipod' : (navigator.platform.match(/mac|win|linux/i) || ['other'])[0].toLowerCase()},
-
-	Features: {xpath: !!(document.evaluate), air: !!(window.runtime), query: !!(document.querySelector)},
-
-	Plugins: {},
-
-	Engines: {
-
-		presto: function(){
-			return (!window.opera) ? false : ((arguments.callee.caller) ? 960 : ((document.getElementsByClassName) ? 950 : 925));
-		},
-
-		trident: function(){
-			return (!window.ActiveXObject) ? false : ((window.XMLHttpRequest) ? ((document.querySelectorAll) ? 6 : 5) : 4);
-		},
-
-		webkit: function(){
-			return (navigator.taintEnabled) ? false : ((Browser.Features.xpath) ? ((Browser.Features.query) ? 525 : 420) : 419);
-		},
-
-		gecko: function(){
-			return (!document.getBoxObjectFor && window.mozInnerScreenX == null) ? false : ((document.getElementsByClassName) ? 19 : 18);
-		}
-
-	}
-
-}, Browser || {});
-
-Browser.Platform[Browser.Platform.name] = true;
-
-Browser.detect = function(){
-
-	for (var engine in this.Engines){
-		var version = this.Engines[engine]();
-		if (version){
-			this.Engine = {name: engine, version: version};
-			this.Engine[engine] = this.Engine[engine + version] = true;
-			break;
-		}
-	}
-
-	return {name: engine, version: version};
-
-};
-
-Browser.detect();
-
-Browser.Request = function(){
-	return $try(function(){
-		return new XMLHttpRequest();
-	}, function(){
-		return new ActiveXObject('MSXML2.XMLHTTP');
-	}, function(){
-		return new ActiveXObject('Microsoft.XMLHTTP');
-	});
-};
-
-Browser.Features.xhr = !!(Browser.Request());
-
-Browser.Plugins.Flash = (function(){
-	var version = ($try(function(){
-		return navigator.plugins['Shockwave Flash'].description;
-	}, function(){
-		return new ActiveXObject('ShockwaveFlash.ShockwaveFlash').GetVariable('$version');
-	}) || '0 r0').match(/\d+/g);
-	return {version: parseInt(version[0] || 0 + '.' + version[1], 10) || 0, build: parseInt(version[2], 10) || 0};
-})();
-
-function $exec(text){
-	if (!text) return text;
-	if (window.execScript){
-		window.execScript(text);
-	} else {
-		var script = document.createElement('script');
-		script.setAttribute('type', 'text/javascript');
-		script[(Browser.Engine.webkit && Browser.Engine.version < 420) ? 'innerText' : 'text'] = text;
-		document.head.appendChild(script);
-		document.head.removeChild(script);
-	}
-	return text;
-};
-
-Native.UID = 1;
-
-var $uid = (Browser.Engine.trident) ? function(item){
-	return (item.uid || (item.uid = [Native.UID++]))[0];
-} : function(item){
-	return item.uid || (item.uid = Native.UID++);
-};
-
-var Window = new Native({
-
-	name: 'Window',
-
-	legacy: (Browser.Engine.trident) ? null: window.Window,
-
-	initialize: function(win){
-		$uid(win);
-		if (!win.Element){
-			win.Element = $empty;
-			if (Browser.Engine.webkit) win.document.createElement("iframe"); //fixes safari 2
-			win.Element.prototype = (Browser.Engine.webkit) ? window["[[DOMElement.prototype]]"] : {};
-		}
-		win.document.window = win;
-		return $extend(win, Window.Prototype);
-	},
-
-	afterImplement: function(property, value){
-		window[property] = Window.Prototype[property] = value;
-	}
-
-});
-
-Window.Prototype = {$family: {name: 'window'}};
-
-new Window(window);
-
-var Document = new Native({
-
-	name: 'Document',
-
-	legacy: (Browser.Engine.trident) ? null: window.Document,
-
-	initialize: function(doc){
-		$uid(doc);
-		doc.head = doc.getElementsByTagName('head')[0];
-		doc.html = doc.getElementsByTagName('html')[0];
-		if (Browser.Engine.trident && Browser.Engine.version <= 4) $try(function(){
-			doc.execCommand("BackgroundImageCache", false, true);
-		});
-		if (Browser.Engine.trident) doc.window.attachEvent('onunload', function(){
-			doc.window.detachEvent('onunload', arguments.callee);
-			doc.head = doc.html = doc.window = null;
-		});
-		return $extend(doc, Document.Prototype);
-	},
-
-	afterImplement: function(property, value){
-		document[property] = Document.Prototype[property] = value;
-	}
-
-});
-
-Document.Prototype = {$family: {name: 'document'}};
-
-new Document(document);
 
 /*
 ---
@@ -2072,6 +1689,731 @@ if (Browser.Engine.webkit && Browser.Engine.version < 420) Element.Properties.te
 /*
 ---
 
+script: Event.js
+
+description: Contains the Event Class, to make the event object cross-browser.
+
+license: MIT-style license.
+
+requires:
+- /Window
+- /Document
+- /Hash
+- /Array
+- /Function
+- /String
+
+provides: [Event]
+
+...
+*/
+
+var Event = new Native({
+
+	name: 'Event',
+
+	initialize: function(event, win){
+		win = win || window;
+		var doc = win.document;
+		event = event || win.event;
+		if (event.$extended) return event;
+		this.$extended = true;
+		var type = event.type;
+		var target = event.target || event.srcElement;
+		while (target && target.nodeType == 3) target = target.parentNode;
+
+		if (type.test(/key/)){
+			var code = event.which || event.keyCode;
+			var key = Event.Keys.keyOf(code);
+			if (type == 'keydown'){
+				var fKey = code - 111;
+				if (fKey > 0 && fKey < 13) key = 'f' + fKey;
+			}
+			key = key || String.fromCharCode(code).toLowerCase();
+		} else if (type.match(/(click|mouse|menu)/i)){
+			doc = (!doc.compatMode || doc.compatMode == 'CSS1Compat') ? doc.html : doc.body;
+			var page = {
+				x: event.pageX || event.clientX + doc.scrollLeft,
+				y: event.pageY || event.clientY + doc.scrollTop
+			};
+			var client = {
+				x: (event.pageX) ? event.pageX - win.pageXOffset : event.clientX,
+				y: (event.pageY) ? event.pageY - win.pageYOffset : event.clientY
+			};
+			if (type.match(/DOMMouseScroll|mousewheel/)){
+				var wheel = (event.wheelDelta) ? event.wheelDelta / 120 : -(event.detail || 0) / 3;
+			}
+			var rightClick = (event.which == 3) || (event.button == 2);
+			var related = null;
+			if (type.match(/over|out/)){
+				switch (type){
+					case 'mouseover': related = event.relatedTarget || event.fromElement; break;
+					case 'mouseout': related = event.relatedTarget || event.toElement;
+				}
+				if (!(function(){
+					while (related && related.nodeType == 3) related = related.parentNode;
+					return true;
+				}).create({attempt: Browser.Engine.gecko})()) related = false;
+			}
+		}
+
+		return $extend(this, {
+			event: event,
+			type: type,
+
+			page: page,
+			client: client,
+			rightClick: rightClick,
+
+			wheel: wheel,
+
+			relatedTarget: related,
+			target: target,
+
+			code: code,
+			key: key,
+
+			shift: event.shiftKey,
+			control: event.ctrlKey,
+			alt: event.altKey,
+			meta: event.metaKey
+		});
+	}
+
+});
+
+Event.Keys = new Hash({
+	'enter': 13,
+	'up': 38,
+	'down': 40,
+	'left': 37,
+	'right': 39,
+	'esc': 27,
+	'space': 32,
+	'backspace': 8,
+	'tab': 9,
+	'delete': 46
+});
+
+Event.implement({
+
+	stop: function(){
+		return this.stopPropagation().preventDefault();
+	},
+
+	stopPropagation: function(){
+		if (this.event.stopPropagation) this.event.stopPropagation();
+		else this.event.cancelBubble = true;
+		return this;
+	},
+
+	preventDefault: function(){
+		if (this.event.preventDefault) this.event.preventDefault();
+		else this.event.returnValue = false;
+		return this;
+	}
+
+});
+
+/*
+---
+
+script: Element.Event.js
+
+description: Contains Element methods for dealing with events. This file also includes mouseenter and mouseleave custom Element Events.
+
+license: MIT-style license.
+
+requires: 
+- /Element
+- /Event
+
+provides: [Element.Event]
+
+...
+*/
+
+Element.Properties.events = {set: function(events){
+	this.addEvents(events);
+}};
+
+Native.implement([Element, Window, Document], {
+
+	addEvent: function(type, fn){
+		var events = this.retrieve('events', {});
+		events[type] = events[type] || {'keys': [], 'values': []};
+		if (events[type].keys.contains(fn)) return this;
+		events[type].keys.push(fn);
+		var realType = type, custom = Element.Events.get(type), condition = fn, self = this;
+		if (custom){
+			if (custom.onAdd) custom.onAdd.call(this, fn);
+			if (custom.condition){
+				condition = function(event){
+					if (custom.condition.call(this, event)) return fn.call(this, event);
+					return true;
+				};
+			}
+			realType = custom.base || realType;
+		}
+		var defn = function(){
+			return fn.call(self);
+		};
+		var nativeEvent = Element.NativeEvents[realType];
+		if (nativeEvent){
+			if (nativeEvent == 2){
+				defn = function(event){
+					event = new Event(event, self.getWindow());
+					if (condition.call(self, event) === false) event.stop();
+				};
+			}
+			this.addListener(realType, defn);
+		}
+		events[type].values.push(defn);
+		return this;
+	},
+
+	removeEvent: function(type, fn){
+		var events = this.retrieve('events');
+		if (!events || !events[type]) return this;
+		var pos = events[type].keys.indexOf(fn);
+		if (pos == -1) return this;
+		events[type].keys.splice(pos, 1);
+		var value = events[type].values.splice(pos, 1)[0];
+		var custom = Element.Events.get(type);
+		if (custom){
+			if (custom.onRemove) custom.onRemove.call(this, fn);
+			type = custom.base || type;
+		}
+		return (Element.NativeEvents[type]) ? this.removeListener(type, value) : this;
+	},
+
+	addEvents: function(events){
+		for (var event in events) this.addEvent(event, events[event]);
+		return this;
+	},
+
+	removeEvents: function(events){
+		var type;
+		if ($type(events) == 'object'){
+			for (type in events) this.removeEvent(type, events[type]);
+			return this;
+		}
+		var attached = this.retrieve('events');
+		if (!attached) return this;
+		if (!events){
+			for (type in attached) this.removeEvents(type);
+			this.eliminate('events');
+		} else if (attached[events]){
+			while (attached[events].keys[0]) this.removeEvent(events, attached[events].keys[0]);
+			attached[events] = null;
+		}
+		return this;
+	},
+
+	fireEvent: function(type, args, delay){
+		var events = this.retrieve('events');
+		if (!events || !events[type]) return this;
+		events[type].keys.each(function(fn){
+			fn.create({'bind': this, 'delay': delay, 'arguments': args})();
+		}, this);
+		return this;
+	},
+
+	cloneEvents: function(from, type){
+		from = document.id(from);
+		var fevents = from.retrieve('events');
+		if (!fevents) return this;
+		if (!type){
+			for (var evType in fevents) this.cloneEvents(from, evType);
+		} else if (fevents[type]){
+			fevents[type].keys.each(function(fn){
+				this.addEvent(type, fn);
+			}, this);
+		}
+		return this;
+	}
+
+});
+
+Element.NativeEvents = {
+	click: 2, dblclick: 2, mouseup: 2, mousedown: 2, contextmenu: 2, //mouse buttons
+	mousewheel: 2, DOMMouseScroll: 2, //mouse wheel
+	mouseover: 2, mouseout: 2, mousemove: 2, selectstart: 2, selectend: 2, //mouse movement
+	keydown: 2, keypress: 2, keyup: 2, //keyboard
+	focus: 2, blur: 2, change: 2, reset: 2, select: 2, submit: 2, //form elements
+	load: 1, unload: 1, beforeunload: 2, resize: 1, move: 1, DOMContentLoaded: 1, readystatechange: 1, //window
+	error: 1, abort: 1, scroll: 1 //misc
+};
+
+(function(){
+
+var $check = function(event){
+	var related = event.relatedTarget;
+	if (related == undefined) return true;
+	if (related === false) return false;
+	return ($type(this) != 'document' && related != this && related.prefix != 'xul' && !this.hasChild(related));
+};
+
+Element.Events = new Hash({
+
+	mouseenter: {
+		base: 'mouseover',
+		condition: $check
+	},
+
+	mouseleave: {
+		base: 'mouseout',
+		condition: $check
+	},
+
+	mousewheel: {
+		base: (Browser.Engine.gecko) ? 'DOMMouseScroll' : 'mousewheel'
+	}
+
+});
+
+})();
+
+/*
+---
+
+script: DomReady.js
+
+description: Contains the custom event domready.
+
+license: MIT-style license.
+
+requires:
+- /Element.Event
+
+provides: [DomReady]
+
+...
+*/
+
+Element.Events.domready = {
+
+	onAdd: function(fn){
+		if (Browser.loaded) fn.call(this);
+	}
+
+};
+
+(function(){
+
+	var domready = function(){
+		if (Browser.loaded) return;
+		Browser.loaded = true;
+		window.fireEvent('domready');
+		document.fireEvent('domready');
+	};
+	
+	window.addEvent('load', domready);
+
+	if (Browser.Engine.trident){
+		var temp = document.createElement('div');
+		(function(){
+			($try(function(){
+				temp.doScroll(); // Technique by Diego Perini
+				return document.id(temp).inject(document.body).set('html', 'temp').dispose();
+			})) ? domready() : arguments.callee.delay(50);
+		})();
+	} else if (Browser.Engine.webkit && Browser.Engine.version < 525){
+		(function(){
+			(['loaded', 'complete'].contains(document.readyState)) ? domready() : arguments.callee.delay(50);
+		})();
+	} else {
+		document.addEvent('DOMContentLoaded', domready);
+	}
+
+})();
+
+/*
+---
+
+script: More.js
+
+description: MooTools More
+
+license: MIT-style license
+
+authors:
+- Guillermo Rauch
+- Thomas Aylott
+- Scott Kyle
+
+requires:
+- core:1.2.4/MooTools
+
+provides: [MooTools.More]
+
+...
+*/
+
+MooTools.More = {
+	'version': '1.2.4.3dev',
+	'build': '%build%'
+};
+/*
+---
+
+script: Class.js
+
+description: Contains the Class Function for easily creating, extending, and implementing reusable Classes.
+
+license: MIT-style license.
+
+requires:
+- /$util
+- /Native
+- /Array
+- /String
+- /Function
+- /Number
+- /Hash
+
+provides: [Class]
+
+...
+*/
+
+function Class(params){
+	
+	if (params instanceof Function) params = {initialize: params};
+	
+	var newClass = function(){
+		Object.reset(this);
+		if (newClass._prototyping) return this;
+		this._current = $empty;
+		var value = (this.initialize) ? this.initialize.apply(this, arguments) : this;
+		delete this._current; delete this.caller;
+		return value;
+	}.extend(this);
+	
+	newClass.implement(params);
+	
+	newClass.constructor = Class;
+	newClass.prototype.constructor = newClass;
+
+	return newClass;
+
+};
+
+Function.prototype.protect = function(){
+	this._protected = true;
+	return this;
+};
+
+Object.reset = function(object, key){
+		
+	if (key == null){
+		for (var p in object) Object.reset(object, p);
+		return object;
+	}
+	
+	delete object[key];
+	
+	switch ($type(object[key])){
+		case 'object':
+			var F = function(){};
+			F.prototype = object[key];
+			var i = new F;
+			object[key] = Object.reset(i);
+		break;
+		case 'array': object[key] = $unlink(object[key]); break;
+	}
+	
+	return object;
+	
+};
+
+new Native({name: 'Class', initialize: Class}).extend({
+
+	instantiate: function(F){
+		F._prototyping = true;
+		var proto = new F;
+		delete F._prototyping;
+		return proto;
+	},
+	
+	wrap: function(self, key, method){
+		if (method._origin) method = method._origin;
+		
+		return function(){
+			if (method._protected && this._current == null) throw new Error('The method "' + key + '" cannot be called.');
+			var caller = this.caller, current = this._current;
+			this.caller = current; this._current = arguments.callee;
+			var result = method.apply(this, arguments);
+			this._current = current; this.caller = caller;
+			return result;
+		}.extend({_owner: self, _origin: method, _name: key});
+
+	}
+	
+});
+
+Class.implement({
+	
+	implement: function(key, value){
+		
+		if ($type(key) == 'object'){
+			for (var p in key) this.implement(p, key[p]);
+			return this;
+		}
+		
+		var mutator = Class.Mutators[key];
+		
+		if (mutator){
+			value = mutator.call(this, value);
+			if (value == null) return this;
+		}
+		
+		var proto = this.prototype;
+
+		switch ($type(value)){
+			
+			case 'function':
+				if (value._hidden) return this;
+				proto[key] = Class.wrap(this, key, value);
+			break;
+			
+			case 'object':
+				var previous = proto[key];
+				if ($type(previous) == 'object') $mixin(previous, value);
+				else proto[key] = $unlink(value);
+			break;
+			
+			case 'array':
+				proto[key] = $unlink(value);
+			break;
+			
+			default: proto[key] = value;
+
+		}
+		
+		return this;
+
+	}
+	
+});
+
+Class.Mutators = {
+	
+	Extends: function(parent){
+
+		this.parent = parent;
+		this.prototype = Class.instantiate(parent);
+
+		this.implement('parent', function(){
+			var name = this.caller._name, previous = this.caller._owner.parent.prototype[name];
+			if (!previous) throw new Error('The method "' + name + '" has no parent.');
+			return previous.apply(this, arguments);
+		}.protect());
+
+	},
+
+	Implements: function(items){
+		$splat(items).each(function(item){
+			if (item instanceof Function) item = Class.instantiate(item);
+			this.implement(item);
+		}, this);
+
+	}
+	
+};
+
+/*
+---
+
+script: Log.js
+
+description: Provides basic logging functionality for plugins to implement.
+
+license: MIT-style license
+
+authors:
+- Guillermo Rauch
+- Thomas Aylott
+- Scott Kyle
+
+requires:
+- core:1.2.4/Class
+- /MooTools.More
+
+provides: [Log]
+
+...
+*/
+
+(function(){
+
+var global = this;
+
+var log = function(){
+	if (global.console && console.log){
+		try {
+			console.log.apply(console, arguments);
+		} catch(e) {
+			console.log(Array.slice(arguments));
+		}
+	} else {
+		Log.logged.push(arguments);
+	}
+	return this;
+};
+
+var disabled = function(){
+	this.logged.push(arguments);
+	return this;
+};
+
+this.Log = new Class({
+	
+	logged: [],
+	
+	log: disabled,
+	
+	resetLog: function(){
+		this.logged.empty();
+		return this;
+	},
+
+	enableLog: function(){
+		this.log = log;
+		this.logged.each(function(args){
+			this.log.apply(this, args);
+		}, this);
+		return this.resetLog();
+	},
+
+	disableLog: function(){
+		this.log = disabled;
+		return this;
+	}
+	
+});
+
+Log.extend(new Log).enableLog();
+
+// legacy
+Log.logger = function(){
+	return this.log.apply(this, arguments);
+};
+
+})();
+/*
+---
+
+script: Class.Extras.js
+
+description: Contains Utility Classes that can be implemented into your own Classes to ease the execution of many common tasks.
+
+license: MIT-style license.
+
+requires:
+- /Class
+
+provides: [Chain, Events, Options]
+
+...
+*/
+
+var Chain = new Class({
+
+	$chain: [],
+
+	chain: function(){
+		this.$chain.extend(Array.flatten(arguments));
+		return this;
+	},
+
+	callChain: function(){
+		return (this.$chain.length) ? this.$chain.shift().apply(this, arguments) : false;
+	},
+
+	clearChain: function(){
+		this.$chain.empty();
+		return this;
+	}
+
+});
+
+var Events = new Class({
+
+	$events: {},
+
+	addEvent: function(type, fn, internal){
+		type = Events.removeOn(type);
+		if (fn != $empty){
+			this.$events[type] = this.$events[type] || [];
+			this.$events[type].include(fn);
+			if (internal) fn.internal = true;
+		}
+		return this;
+	},
+
+	addEvents: function(events){
+		for (var type in events) this.addEvent(type, events[type]);
+		return this;
+	},
+
+	fireEvent: function(type, args, delay){
+		type = Events.removeOn(type);
+		if (!this.$events || !this.$events[type]) return this;
+		this.$events[type].each(function(fn){
+			fn.create({'bind': this, 'delay': delay, 'arguments': args})();
+		}, this);
+		return this;
+	},
+
+	removeEvent: function(type, fn){
+		type = Events.removeOn(type);
+		if (!this.$events[type]) return this;
+		if (!fn.internal) this.$events[type].erase(fn);
+		return this;
+	},
+
+	removeEvents: function(events){
+		var type;
+		if ($type(events) == 'object'){
+			for (type in events) this.removeEvent(type, events[type]);
+			return this;
+		}
+		if (events) events = Events.removeOn(events);
+		for (type in this.$events){
+			if (events && events != type) continue;
+			var fns = this.$events[type];
+			for (var i = fns.length; i--; i) this.removeEvent(type, fns[i]);
+		}
+		return this;
+	}
+
+});
+
+Events.removeOn = function(string){
+	return string.replace(/^on([A-Z])/, function(full, first){
+		return first.toLowerCase();
+	});
+};
+
+var Options = new Class({
+
+	setOptions: function(){
+		this.options = $merge.run([this.options].extend(arguments));
+		if (!this.addEvent) return this;
+		for (var option in this.options){
+			if ($type(this.options[option]) != 'function' || !(/^on[A-Z]/).test(option)) continue;
+			this.addEvent(option, this.options[option]);
+			delete this.options[option];
+		}
+		return this;
+	}
+
+});
+
+/*
+---
+
 script: Request.js
 
 description: Powerful all purpose Request Class. Uses XMLHTTPRequest.
@@ -2447,391 +2789,580 @@ Request.JSONP = new Class({
 Request.JSONP.counter = 0;
 Request.JSONP.request_map = {};
 /*
-Script: Function.BrawndoExtras.js
-	Extends the Function class (using .implement) with various methods.
+---
+
+script: Element.Dimensions.js
+
+description: Contains methods to work with size, scroll, or positioning of Elements and the window object.
+
+license: MIT-style license.
+
+credits:
+- Element positioning based on the [qooxdoo](http://qooxdoo.org/) code and smart browser fixes, [LGPL License](http://www.gnu.org/licenses/lgpl.html).
+- Viewport dimensions based on [YUI](http://developer.yahoo.com/yui/) code, [BSD License](http://developer.yahoo.com/yui/license.html).
+
+requires:
+- /Element
+
+provides: [Element.Dimensions]
+
+...
 */
 
+(function(){
 
-// todo implement as described here: http://unscriptable.com/index.php/2009/05/01/a-better-javascript-memoizer/
-Function.implement({
-	cache: function(binding){
-		this.brawndo_cache = {}
-		return function(){
-			var key = $A(arguments).join('+')
-			this.brawndo_cache[key] = this.brawndo_cache[key] || this.apply((binding || this), arguments)
-			return this.brawndo_cache[key]
-		}.bind(this)
-	}
-}); 
+Element.implement({
 
-var MicroAppModel = new Class({
-	Implements: [Events, Options],
-	options: {
-		view_options: {}
-	},
-	
-	new_data: true,
-	
-	initialize: function(options){
-		this.setOptions(options);
-		this.db = [];
-		this.data_ready = false;
-		return this;
-	},
-	
-	get_data: function(){
-		if (this.data_ready)
-			this.fireEvent('dataReady', this);
-		else {
-		  var req = new Request.JSONP($merge({
-  		    url: this.options.json_url, 
-  		    abortAfter : 1000, 
-  		    retries : 0,
-  		    timeout : 5000
-		    }, this.options.json_opts) 
-			);
-			
-			req.addEvent('onComplete', this.process_data.bind(this));
-			
-			req.send();
+	scrollTo: function(x, y){
+		if (isBody(this)){
+			this.getWindow().scrollTo(x, y);
+		} else {
+			this.scrollLeft = x;
+			this.scrollTop = y;
 		}
-			
 		return this;
 	},
-	
-	process_data: function(json){
-		// todo check to see if data is new and set new_data so that microapp can determine if it should procede with new html
-		this.db = this.db.map(function(row){
-			row.model = this;
-			return row;
-		}, this);
-		
-		this.data_ready = true;
-		this.fireEvent('dataReady', this);
+
+	getSize: function(){
+		if (isBody(this)) return this.getWindow().getSize();
+		return {x: this.offsetWidth, y: this.offsetHeight};
 	},
 
-	sort_by: function(field){
-		return this._sort_by.cache(this)(field);
+	getScrollSize: function(){
+		if (isBody(this)) return this.getWindow().getScrollSize();
+		return {x: this.scrollWidth, y: this.scrollHeight};
 	},
-	_sort_by: function(field){
-		return this.db.sort(function(a,b){
-			a[field] - b[field];
-		});
+
+	getScroll: function(){
+		if (isBody(this)) return this.getWindow().getScroll();
+		return {x: this.scrollLeft, y: this.scrollTop};
 	},
-	new_items: function(){
-		return this.db.filter(function(x){
-			return x.is_new;
-		});
+
+	getScrolls: function(){
+		var element = this, position = {x: 0, y: 0};
+		while (element && !isBody(element)){
+			position.x += element.scrollLeft;
+			position.y += element.scrollTop;
+			element = element.parentNode;
+		}
+		return position;
 	},
-	_item_is_new: function(){ return false; },
-	
-	create_views: function(limit){
-		var limit = limit || 100;
-		this.cells = [this.title_elem].combine(this.db.map(function(row){ 
-			if (limit > 1) {
-				var cell = this._to_cell.apply(row);
-				cell.element.hasClass('double-wide') ? limit -= 2 : --limit; // todo extract
-				return cell.to_html();
+
+	getOffsetParent: function(){
+		var element = this;
+		if (isBody(element)) return null;
+		if (!Browser.Engine.trident) return element.offsetParent;
+		while ((element = element.parentNode) && !isBody(element)){
+			if (styleString(element, 'position') != 'static') return element;
+		}
+		return null;
+	},
+
+	getOffsets: function(){
+		if (this.getBoundingClientRect){
+			var bound = this.getBoundingClientRect(),
+				html = document.id(this.getDocument().documentElement),
+				htmlScroll = html.getScroll(),
+				elemScrolls = this.getScrolls(),
+				elemScroll = this.getScroll(),
+				isFixed = (styleString(this, 'position') == 'fixed');
+
+			return {
+				x: bound.left.toInt() + elemScrolls.x - elemScroll.x + ((isFixed) ? 0 : htmlScroll.x) - html.clientLeft,
+				y: bound.top.toInt()  + elemScrolls.y - elemScroll.y + ((isFixed) ? 0 : htmlScroll.y) - html.clientTop
+			};
+		}
+
+		var element = this, position = {x: 0, y: 0};
+		if (isBody(this)) return position;
+
+		while (element && !isBody(element)){
+			position.x += element.offsetLeft;
+			position.y += element.offsetTop;
+
+			if (Browser.Engine.gecko){
+				if (!borderBox(element)){
+					position.x += leftBorder(element);
+					position.y += topBorder(element);
+				}
+				var parent = element.parentNode;
+				if (parent && styleString(parent, 'overflow') != 'visible'){
+					position.x += leftBorder(parent);
+					position.y += topBorder(parent);
+				}
+			} else if (element != this && Browser.Engine.webkit){
+				position.x += leftBorder(element);
+				position.y += topBorder(element);
 			}
-		}.bind(this))).flatten();
-		
-		return this.cells;
-		// return [this.title_elem].combine(this.db.map(function(row){ return this._to_cell.apply(row).to_html() }.bind(this))).first(limit||100)
-	},
-	
-	current_user: function(){
-		return this.options.user_name || this.options.user;
-	}
-}); 
 
-var Flickr = new Class({
-	Extends    : MicroAppModel,
-	options : {
-		site_name  : "flickr",
-		nombre     : "SEEING", 
-		json_url   : "http://api.flickr.com/services/feeds/photos_public.gne",
-		web_source : "http://www.flickr.com",
-		json_opts  : { globalFunction : 'jsonFlickrApi',
-									 data: { lang   : "en-us",
-										       format : 'json' } },
-	 	initial_limit : 15		
-	},								
-	
-	initialize: function(options){
-		this.parent(options)
-		if (this.options.json_opts.data.id === '') this.options.json_url = null
-		
+			element = element.offsetParent;
+		}
+		if (Browser.Engine.gecko && !borderBox(this)){
+			position.x -= leftBorder(this);
+			position.y -= topBorder(this);
+		}
+		return position;
+	},
+
+	getPosition: function(relative){
+		if (isBody(this)) return {x: 0, y: 0};
+		var offset = this.getOffsets(),
+				scroll = this.getScrolls();
+		var position = {
+			x: offset.x - scroll.x,
+			y: offset.y - scroll.y
+		};
+		var relativePosition = (relative && (relative = document.id(relative))) ? relative.getPosition() : {x: 0, y: 0};
+		return {x: position.x - relativePosition.x, y: position.y - relativePosition.y};
+	},
+
+	getCoordinates: function(element){
+		if (isBody(this)) return this.getWindow().getCoordinates();
+		var position = this.getPosition(element),
+				size = this.getSize();
+		var obj = {
+			left: position.x,
+			top: position.y,
+			width: size.x,
+			height: size.y
+		};
+		obj.right = obj.left + obj.width;
+		obj.bottom = obj.top + obj.height;
+		return obj;
+	},
+
+	computePosition: function(obj){
+		return {
+			left: obj.x - styleNumber(this, 'margin-left'),
+			top: obj.y - styleNumber(this, 'margin-top')
+		};
+	},
+
+	setPosition: function(obj){
+		return this.setStyles(this.computePosition(obj));
+	}
+
+});
+
+
+Native.implement([Document, Window], {
+
+	getSize: function(){
+		if (Browser.Engine.presto || Browser.Engine.webkit){
+			var win = this.getWindow();
+			return {x: win.innerWidth, y: win.innerHeight};
+		}
+		var doc = getCompatElement(this);
+		return {x: doc.clientWidth, y: doc.clientHeight};
+	},
+
+	getScroll: function(){
+		var win = this.getWindow(), doc = getCompatElement(this);
+		return {x: win.pageXOffset || doc.scrollLeft, y: win.pageYOffset || doc.scrollTop};
+	},
+
+	getScrollSize: function(){
+		var doc = getCompatElement(this), min = this.getSize();
+		return {x: Math.max(doc.scrollWidth, min.x), y: Math.max(doc.scrollHeight, min.y)};
+	},
+
+	getPosition: function(){
+		return {x: 0, y: 0};
+	},
+
+	getCoordinates: function(){
+		var size = this.getSize();
+		return {top: 0, left: 0, bottom: size.y, right: size.x, height: size.y, width: size.x};
+	}
+
+});
+
+// private methods
+
+var styleString = Element.getComputedStyle;
+
+function styleNumber(element, style){
+	return styleString(element, style).toInt() || 0;
+};
+
+function borderBox(element){
+	return styleString(element, '-moz-box-sizing') == 'border-box';
+};
+
+function topBorder(element){
+	return styleNumber(element, 'border-top-width');
+};
+
+function leftBorder(element){
+	return styleNumber(element, 'border-left-width');
+};
+
+function isBody(element){
+	return (/^(?:body|html)$/i).test(element.tagName);
+};
+
+function getCompatElement(element){
+	var doc = element.getDocument();
+	return (!doc.compatMode || doc.compatMode == 'CSS1Compat') ? doc.html : doc.body;
+};
+
+})();
+
+//aliases
+Element.alias('setPosition', 'position'); //compatability
+
+Native.implement([Window, Document, Element], {
+
+	getHeight: function(){
+		return this.getSize().y;
+	},
+
+	getWidth: function(){
+		return this.getSize().x;
+	},
+
+	getScrollTop: function(){
+		return this.getScroll().y;
+	},
+
+	getScrollLeft: function(){
+		return this.getScroll().x;
+	},
+
+	getScrollHeight: function(){
+		return this.getScrollSize().y;
+	},
+
+	getScrollWidth: function(){
+		return this.getScrollSize().x;
+	},
+
+	getTop: function(){
+		return this.getPosition().y;
+	},
+
+	getLeft: function(){
+		return this.getPosition().x;
+	}
+
+});
+
+/*
+---
+
+script: Element.Style.js
+
+description: Contains methods for interacting with the styles of Elements in a fashionable way.
+
+license: MIT-style license.
+
+requires:
+- /Element
+
+provides: [Element.Style]
+
+...
+*/
+
+Element.Properties.styles = {set: function(styles){
+	this.setStyles(styles);
+}};
+
+Element.Properties.opacity = {
+
+	set: function(opacity, novisibility){
+		if (!novisibility){
+			if (opacity == 0){
+				if (this.style.visibility != 'hidden') this.style.visibility = 'hidden';
+			} else {
+				if (this.style.visibility != 'visible') this.style.visibility = 'visible';
+			}
+		}
+		if (!this.currentStyle || !this.currentStyle.hasLayout) this.style.zoom = 1;
+		if (Browser.Engine.trident) this.style.filter = (opacity == 1) ? '' : 'alpha(opacity=' + opacity * 100 + ')';
+		this.style.opacity = opacity;
+		this.store('opacity', opacity);
+	},
+
+	get: function(){
+		return this.retrieve('opacity', 1);
+	}
+
+};
+
+Element.implement({
+
+	setOpacity: function(value){
+		return this.set('opacity', value, true);
+	},
+
+	getOpacity: function(){
+		return this.get('opacity');
+	},
+
+	setStyle: function(property, value){
+		switch (property){
+			case 'opacity': return this.set('opacity', parseFloat(value));
+			case 'float': property = (Browser.Engine.trident) ? 'styleFloat' : 'cssFloat';
+		}
+		property = property.camelCase();
+		if ($type(value) != 'string'){
+			var map = (Element.Styles.get(property) || '@').split(' ');
+			value = $splat(value).map(function(val, i){
+				if (!map[i]) return '';
+				return ($type(val) == 'number') ? map[i].replace('@', Math.round(val)) : val;
+			}).join(' ');
+		} else if (value == String(Number(value))){
+			value = Math.round(value);
+		}
+		this.style[property] = value;
+		return this;
+	},
+
+	getStyle: function(property){
+		switch (property){
+			case 'opacity': return this.get('opacity');
+			case 'float': property = (Browser.Engine.trident) ? 'styleFloat' : 'cssFloat';
+		}
+		property = property.camelCase();
+		var result = this.style[property];
+		if (!$chk(result)){
+			result = [];
+			for (var style in Element.ShortStyles){
+				if (property != style) continue;
+				for (var s in Element.ShortStyles[style]) result.push(this.getStyle(s));
+				return result.join(' ');
+			}
+			result = this.getComputedStyle(property);
+		}
+		if (result){
+			result = String(result);
+			var color = result.match(/rgba?\([\d\s,]+\)/);
+			if (color) result = result.replace(color[0], color[0].rgbToHex());
+		}
+		if (Browser.Engine.presto || (Browser.Engine.trident && !$chk(parseInt(result, 10)))){
+			if (property.test(/^(height|width)$/)){
+				var values = (property == 'width') ? ['left', 'right'] : ['top', 'bottom'], size = 0;
+				values.each(function(value){
+					size += this.getStyle('border-' + value + '-width').toInt() + this.getStyle('padding-' + value).toInt();
+				}, this);
+				return this['offset' + property.capitalize()] - size + 'px';
+			}
+			if ((Browser.Engine.presto) && String(result).test('px')) return result;
+			if (property.test(/(border(.+)Width|margin|padding)/)) return '0px';
+		}
+		return result;
+	},
+
+	setStyles: function(styles){
+		for (var style in styles) this.setStyle(style, styles[style]);
+		return this;
+	},
+
+	getStyles: function(){
+		var result = {};
+		Array.flatten(arguments).each(function(key){
+			result[key] = this.getStyle(key);
+		}, this);
+		return result;
+	}
+
+});
+
+Element.Styles = new Hash({
+	left: '@px', top: '@px', bottom: '@px', right: '@px',
+	width: '@px', height: '@px', maxWidth: '@px', maxHeight: '@px', minWidth: '@px', minHeight: '@px',
+	backgroundColor: 'rgb(@, @, @)', backgroundPosition: '@px @px', color: 'rgb(@, @, @)',
+	fontSize: '@px', letterSpacing: '@px', lineHeight: '@px', clip: 'rect(@px @px @px @px)',
+	margin: '@px @px @px @px', padding: '@px @px @px @px', border: '@px @ rgb(@, @, @) @px @ rgb(@, @, @) @px @ rgb(@, @, @)',
+	borderWidth: '@px @px @px @px', borderStyle: '@ @ @ @', borderColor: 'rgb(@, @, @) rgb(@, @, @) rgb(@, @, @) rgb(@, @, @)',
+	zIndex: '@', 'zoom': '@', fontWeight: '@', textIndent: '@px', opacity: '@'
+});
+
+Element.ShortStyles = {margin: {}, padding: {}, border: {}, borderWidth: {}, borderStyle: {}, borderColor: {}};
+
+['Top', 'Right', 'Bottom', 'Left'].each(function(direction){
+	var Short = Element.ShortStyles;
+	var All = Element.Styles;
+	['margin', 'padding'].each(function(style){
+		var sd = style + direction;
+		Short[style][sd] = All[sd] = '@px';
+	});
+	var bd = 'border' + direction;
+	Short.border[bd] = All[bd] = '@px @ rgb(@, @, @)';
+	var bdw = bd + 'Width', bds = bd + 'Style', bdc = bd + 'Color';
+	Short[bd] = {};
+	Short.borderWidth[bdw] = Short[bd][bdw] = All[bdw] = '@px';
+	Short.borderStyle[bds] = Short[bd][bds] = All[bds] = '@';
+	Short.borderColor[bdc] = Short[bd][bdc] = All[bdc] = 'rgb(@, @, @)';
+});
+
+/*
+Script: String.BrawndoExtras.js
+	Extends the String class (using .implement) with various methods.
+*/
+
+String.implement({
+	replace_html_chars: function(){
+		return this.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+	},
+	parse_int: function(){
+		return this.match(/(\d+)/)[0].toInt();
+	},
+	is_empty: function(do_clean){
+		if (do_clean) return this.clean().length === 0;
+		else return this.length === 0;
+	},
+	safe_encode: function(){
+		if ($defined(encodeURIComponent))
+			return encodeURIComponent(this);
+		else
+    	return escape(this);
+	},
+	first: function(num){
+		return this.substring(0,($chk(num) ? num : 1));
+	},
+	make_urls_links: function(){
+		return this.replace(/(\w+:\/\/[A-Za-z0-9-_]+\.[A-Za-z0-9-_:;\(\)%&\?\/.=]+)/gi, '<a href="$1">$1</a>');
+	},
+	truncate: function(limit, opts){
+		if (this.length <= limit) return this;
+		var opts  = $pick(opts, {});
+		var where = $pick(opts['where'], 'end');
+		var mark  = $pick(opts['mark'], '...');
+		var limit = $pick(limit, 50) - mark.length; 
+
+		switch(where){
+			case 'end'       : return this.slice(0, limit) + mark;
+			case 'middle'    : return this.slice(0, (limit/2).ceil()) + mark + this.slice(-(limit/2).floor());
+			case 'beginning' : return mark + this.slice(-limit);
+			default: return null;
+		}
+	}
+});
+
+/*
+Script: Element.BrawndoExtras.js
+	Extends the Element class (using .implement) with various methods for mutating styles.
+*/
+
+Element.implement({
+	lock: function(style, min, max){
+		if (!$defined(style)) return null;
+		try{
+			var set_to = this.getStyle(style)
+			if ($chk(min)) set_to = Math.max(min, this.getStyle(style).toInt()) + "px"
+			this.setStyle(style, set_to)
+		}catch(e){}
 		return this
 	},
-	
-	process_data: function(json){
-		if (json.items){
-			this.db = json.items.map(function(json_item){
-				// todo add user_name
-				return {
-					title       : json_item.title,
-					created_on  : Date.parse(json_item.date_taken),
-					img_url     : json_item.media.m,
-					source      : json_item.link,
-					description : json_item.description,
-					tags        : json_item.tags,
-					is_new      : this._item_is_new(Date.parse(json_item.date_taken), this.options.site_name)
-				}
-		  }.bind(this))
-		} else if (json.photos && json.photos.photo) {
-			this.db = json.photos.photo.map(function(json_item){
-				return {
-					title       : json_item.title,
-					user_name   : json_item.ownername,
-					created_on  : Date.parse(json_item.datetaken),
-					img_url     : "http://farm" + json_item.farm + ".static.flickr.com/" + json_item.server + "/" + json_item.id + "_" + json_item.secret + "_m.jpg",
-					source      : "http://flickr.com/photos/" + json_item.owner + "/" + json_item.id,
-					description : "",
-					tags        : json_item.tags,
-					is_new      : this._item_is_new(Date.parse(json_item.datetaken), this.options.site_name)
-				}
-			}.bind(this))
-		}
-
-		this.parent()
-		return this.db
+	copyStyles: function(elem, styles){
+		[styles].flatten().each(function(s){
+			try {
+				this.setStyle(s,elem.getStyle(s))
+			}catch(e){}
+		},this)
+		return this
 	},
-	
-	_to_cell: function(){
-		return new MicroAppImageView(this.img_url, $merge({ 
-			'title' 		   : this.title, 
-			'created_on'   : this.created_on,
-			'source' 		   : this.source,
-			'custom_class' : (this.is_new ? 'new' : '')
-		}, this.model.options.image_view_options))
+	add_to_style: function(what, by){
+		[what].flatten().each(function(m){
+			this.setStyle( m, (this.getStyle(m).parse_int() + by) )		
+		}, this)		
+		return this
 	}
-});
+}); 
+
 /*
-Script: Array.BrawndoExtras.js
-	Extends the Array class (using .implement) with various methods.
+Script: InvisibleDimensions.js
+	Get the dimensions of elements that aren't visible, displayed, or even in the DOM.
+		Supported Events: onStart, onComplete, onOpen, onClose, onClicked
 */
 
-Array.implement({
-	last: function(){
-		return this[this.length-1];
-	},
-	first: function(sel){
-	  var sel = sel || 0;
-	  if ($type(sel) == "number"){
-	    if (sel) return this.slice(0,sel);
-  		else return this[0];
-	  } else if ($type(sel) == "function") {
-        for (var i=0, l=this.length; i < l; i++){
-          if (sel(this[i])) return this[i];
-        }
-	  }
-	},
-	cycle: function(index){
-	  var i = index % this.length;
-		return this[i >= 0 ? i : this.length + i];
-	},
-	reduce: function(fun, initial){
-		var len = this.length >>> 0;
-		if (typeof fun != "function")
-			throw new TypeError();
-    if (len == 0 && arguments.length == 1)
-			throw new TypeError();
-    var i = 0;
-    if (arguments.length >= 2)
-      var rv = arguments[1];
-    else
-      do {
-        if (i in this){
-          rv = this[i++];
-          break;
-        }
-        if (++i >= len)
-          throw new TypeError();
-      } while (true);
-
-    for (; i < len; i++){
-      if (i in this)
-        rv = fun.call(null, rv, this[i], i, this);
-    }
-
-    return rv;
-	},
-	randomize: function() {
-		return this.sort(function() {return 0.5 - Math.random();});
-	},
-	average: function(){
-		var total = 0;
-		this.each(function(x){
-			total += x;
-		});
-		return total/this.length;
-	},
-	sort_numerically: function(){
-		this.sort(function(a,b){
-			var x = a.toInt();
-			var y = b.toInt();
-			if (x > y) return 1;
-			else if (x < y) return -1;
-			else return 0;
-		});
-		return this;
-	},
-	// todo test
-	/* 
-    Array.each_asynchronously  
-
-  	Description:
-    Works just like Array.each except runs each iteration on a specified delay. 
-    This means that script execution will continue in between each iteration, 
-    rather than halting until the full array has been processed. 
-
-    Arguments:
-  	-	fn: (function) The function to execute on each item in the array. It is
-  		passed three arguments: the item, the index and the array itself.
-  	-	delay: (number, optional) Duration of timer for each call to fn. Defaults 
-  		to 10ms. 
-  	-	bind: (object, optional) The object to be used as 'this' in the fn.
-
-  	Example:
-  	['brawndo','has','electrolytes'].each_asynchronously(function(str,i,arr){ 
-  		console.log(str); 
-  	}, 1000);
-  */
-	each_asynchronously: function(fn, delay, bind){
-	  if (this.length === 0) return this;
-		var delay = delay || 10; 
-		var items = this.concat();
-		var index = 0;
-
-		(function(){
-			fn.run([items.shift(), index, this], bind);
-			index += 1;
-			if (items.length > 0) setTimeout(arguments.callee.bind(this), delay);
-		}).delay(delay, this);
-		
-		return this;
-	}
-});
-
-var MicroApp = new Class({
-	Implements : [Events, Options],
+var InvisibleDimensions = new Class({
+	Implements: Options,
+	
 	options : {
-		show_nav : false,
-		show_title_elems : false
+		getSize_updates_width : false,
+		getSize_nulls_height	: false
 	},
 	
-	first_model_ready : false,
-	
-	initialize: function(elem, buckets, options){
-		this.setOptions(options);
-		this.element = $(elem);
-		this.buckets = buckets;
+	initialize: function(element, options){
+		this.setOptions(options)
+		this.element = element;
 		
-		if (this.options.show_nav && window.FixedNav) 
-			// todo change from fixednav to microappnav
-			this.nav = new FixedNav(new Element('ul', {'id':'microapp-nav'}).inject(this.element, 'before'), this.element);
-			
+		if (element.get('tag') == 'img'){
+			this.fake_div = new Element('img').set('src', this.element.get('src').replace('"',''));
+		}else{
+			this.fake_div = new Element('div').set('html', this.element.get('html'));
+			if (this.element.get('tag') == 'input') this.fake_div.set('html', "DUMMY");
+		}
+
+		this.fake_div.setStyles({
+			'position' : 'absolute',
+			'left'     : '-100000px',
+			'top'      : '-100000px'
+		});
+
+		this.fake_div.copyStyles(this.element,[
+			'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+			'font-weight', 'font-size', 'font-family', 'border-width', 'border-style', 'line-height', 'width'
+		]);
+		
 		return this;
 	},
-	
-	reset: function(){
-		this.sorted_cells = [];
-		this.element.set('html','');
-		this.first_model_ready = true;
-	},
-	
-	to_html: function(format){
-		var format = format || 'grouped';
-		this.first_model_ready = false;
+	getSize: function(){
+		this.fake_div.inject(document.body,'bottom').destroy.delay(3000, this.fake_div)
 		
-		this.buckets.each(function(b,i){
-			b.each(function(m){
-				m.injected = false;
-				m.bucket = i;	
-				m.removeEvents('dataReady')
-				 .addEvent('dataReady', this["_"+format].bind(this));
-					
-				this.fireEvent('modelInit', m);
-				m.get_data();
-			}, this);
-		}, this);
-	},
-	
-	_grouped: function(model){	
-		if (model.db.length === 0) return;
-		if (!this.first_model_ready) this.reset();
-		var finished_models = this.buckets.flatten().filter(function(m){ return m.injected; });
+		if (this.options.getSize_updates_width) this.fake_div.setStyle('width', this.element.getWidth())
+		if (this.options.getSize_nulls_height) 	this.fake_div.setStyle('height', null)
 		
-		if (this.options.show_nav) this.nav.element.simple_show();
-		
-		// todo make nav html customizeable
-		if (this.options.show_nav) 				
-			model.nav = model.nav || new Element('li', {
-				'class' : model.options.site_name + (model.new_items().length > 0 ? ' opaque' : ''),
-				'html'  : model.options.nombre + ' ' + (model.new_items().length || '')
-			}).addEvent('click', function(){ this.removeClass('opaque'); });
-
-		// todo make title elem customizeable
-		if (this.options.show_title_elems)
-			model.title_elem = model.title_elem || new Element('div', {
-				'class' : 'cell single-wide grid-title ' + model.options.site_name, 
-				'html'  : model.options.nombre
-			}).act_like_link(model.options.web_source)
-				.adopt( new Element('span', {'class':'show-all','html':'SHOW ' + model.db.length}).addEvent('click', this.model_toggle_all.bind(model)) );
-		else
-			model.title_elem = model.title_elem || new Element('div', {'class':'grid-title'});
-
-		this.fireEvent('modelProcessing', model);
-
-		if (finished_models.length > 0){
-			finished_models.each(function(fm){
-				if (model.bucket < fm.bucket || (fm.sort_by('created_on').first().created_on < model.sort_by('created_on').first().created_on && fm.bucket >= model.bucket)){
-					if (!model.injected){
-						model.create_views(model.options.initial_limit).each(function(cell){ cell.inject(fm.title_elem,'before'); }, this);
-						if (this.options.show_nav) this.nav.add_pair( [model.nav.inject(fm.nav, 'before'), model.title_elem] );
-					}						
-					model.injected = true;
-				}
-			}, this);
-		}
-		
-		if (!model.injected) {
-			this.element.adopt( model.create_views(model.options.initial_limit) );
-			if (this.options.show_nav) this.nav.add_pair( [model.nav.inject(this.nav.element, 'bottom'), model.title_elem] );
-			model.injected = true;
-		}
-		
-		if (finished_models.length == this.buckets.flatten().length - 1){
-			this.fireEvent('htmlUpdated');
-			if (this.options.show_nav) this.nav.handle_hash_scroll();
-		}			
-	},
-	_sorted: function(model){
-		if (model.db.length === 0) return;
-		if (!this.first_model_ready) this.reset();
-		var finished_models = this.buckets.flatten().filter(function(m){ return m.data_ready; });
-		this.sorted_cells = this.sorted_cells || [];
-	
-		if (this.options.show_nav) this.nav.element.simple_hide();
-	
-		this.sorted_cells = this.sorted_cells.include(model.db.first(20).map(function(x){ return x.model._to_cell.apply(x); })).flatten().sort(function(a,b){
-			if      (a.options.created_on >  b.options.created_on) return 1;
-			else if (a.options.created_on <= b.options.created_on) return -1;
-			else return 0;
-		});
-		
-		if (finished_models.length === this.buckets.flatten().length){
-			this.element.adopt(this.sorted_cells.reverse().map(function(x){ return x.to_html(); }));		  
-			this.fireEvent('htmlUpdated');
-		}
-	},
-	
-	model_toggle_all: function(e){
-		e.stop();
-		if (this.options.show_title_elems) {		
-			this.cells.filter(function(c){ return !c.hasClass('grid-title'); }.bind(this)).each(function(cell){ cell.destroy(); });
-			this.title_elem.getFirst('span').set('html', this.cells.length > this.initial_limit ? 'SHOW ' + this.db.length : 'SHOW ' + this.initial_limit);
-		}
-		this.create_views(this.cells.length > this.initial_limit ? this.initial_limit : null).reverse().each(function(cell){ cell.inject(this.title_elem,'after'); }, this);
+		return this.fake_div.getSize();
 	}
 });
+
+Element.implement({
+	invisibleSize: function(){
+		return new InvisibleDimensions(this).getSize()
+	}
+}); 
+
+/*
+Script: Element.BrawndoImages.js
+	Extends the Element class (using .implement) with various methods helpful for dealing with IMGs.
+*/
+
+Element.implement({
+	thumbnail: function(x,y,c,w,h){
+		var height = h || this.getHeight();
+		var width  = w || this.getWidth();
+
+		var wrapper = new Element('div', {
+			'class' 			: c || '',
+			'styles':{
+				"overflow"	: "hidden",
+				"width"			: x + "px",
+				"height"		: y + "px"
+			}
+		});
+		
+		if (this.getParent()) wrapper.wraps(this);
+		else wrapper.adopt(this);
+
+		if (height > width){
+			this.setStyles({
+			  'width'      : x, 
+			  'height'     : 1/(width/height)*x, 
+			  'margin-top' : -(1/(width/height)*x - x)/2 
+			});
+		} else {
+			this.setStyles({
+			  'height'      :x, 
+			  'width'       : width/height*x, 
+			  'margin-left' : -(width/height*x - x)/2 
+			});
+		}
+		
+		return wrapper;
+	}
+}); 
+
