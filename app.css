@@ -8,7 +8,7 @@ body {
 
 
 #outer {
-  -webkit-transition: -webkit-transform 0.3s ease-in-out;  
+  -webkit-transition: -webkit-transform 0.4s ease-in-out;  
   -webkit-transform: translate3d(0,0,0);
 }
 .vertical-orientation #outer.right {
@@ -52,6 +52,9 @@ h1 {
   -webkit-border-radius: 3px;
   -webkit-box-shadow:0 4px 7px rgba(0,0,0,0.4);
 }
+#gallery .thumb.loading {
+  border-color:red;
+}
 
 #showcase-wrapper {
   padding:10px;
@@ -92,3 +95,22 @@ h1 {
   position:relative;
 }
 */
+
+
+.spinner {
+	position: absolute;
+	opacity: 0.6 !important;
+	z-index: 999;
+	background: #fff;
+}
+.spinner-msg {
+	text-align: center;
+	font-weight: bold;
+}
+
+.spinner-img {
+	background: url(spinner.gif) no-repeat;
+	width: 24px;
+	height: 24px;
+	margin: 0 auto;
+}

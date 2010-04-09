@@ -39,13 +39,24 @@ window.addEvent('domready', function(){
       );
       
       $('gallery').getChildren().thumbnail(100,100,'thumb',240,240);
+      
       $('gallery').addEvent('click:relay(.thumb)', function(){
         var img = this.getFirst();
         $('showcase-wrapper').addClass('showing').setStyle('top', window.getScrollTop());
-        $('showcase-image').set('src', img.get('src').replace(/_\w\.jpg/,'_b.jpg'));
+        var big_src = img.get('src').replace(/_\w\.jpg/,'_b.jpg');
         
-        $('outer').toggleClass('right');
-        
+        img.spin();
+        new Asset.image(big_src, {
+          onload: function(){
+            img.unspin();
+            $('showcase-image').set('src', big_src);        
+            $('outer').addClass.delay(200, $('outer'), 'right');
+          }
+        });
+      });
+      
+      $('showcase-image').addEvent('click', function(){
+        $('outer').removeClass('right');
       });
     }
   }).send();
