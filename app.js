@@ -20,7 +20,7 @@ window.addEvent('domready', function(){
   $('showcase-wrapper').addEvent('click', function(){ 
     this.removeClass('showing'); 
   });
-
+  
   new Request.JSONP({
     url : "http://api.flickr.com/services/rest/",
     globalFunction : 'jsonFlickrApi',
@@ -42,7 +42,10 @@ window.addEvent('domready', function(){
       $('gallery').addEvent('click:relay(.thumb)', function(){
         var img = this.getFirst();
         $('showcase-wrapper').addClass('showing').setStyle('top', window.getScrollTop());
-        $('showcase-image').set('src', img.get('src').replace('_\w.jpg','_b.jpg'));
+        $('showcase-image').set('src', img.get('src').replace(/_\w\.jpg/,'_b.jpg'));
+        
+        $('outer').toggleClass('right');
+        
       });
     }
   }).send();
