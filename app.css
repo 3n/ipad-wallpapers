@@ -64,9 +64,6 @@ h1 {
   left:100%;
   display:none;
 }
-  .right #showcase-wrapper {
-    display:block;
-  }
   
 .vertical-orientation #showcase-image {
   max-width:748px;  

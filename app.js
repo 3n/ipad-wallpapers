@@ -49,6 +49,7 @@ window.addEvent('domready', function(){
         new Asset.image(big_src, {
           onload: function(){
             img.unspin();
+            $('showcase-wrapper').setStyle('display','block');
             $('showcase-image').set('src', big_src);        
             $('outer').addClass.delay(200, $('outer'), 'right');
           }
@@ -57,6 +58,7 @@ window.addEvent('domready', function(){
       
       $('showcase-image').addEvent('click', function(){
         $('outer').removeClass('right');
+        $('showcase-wrapper').setStyle.delay(500, $('showcase-wrapper'), ['display','none']);
       });
     }
   }).send();
