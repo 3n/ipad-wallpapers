@@ -37,7 +37,7 @@ h1 {
   margin:10px 0 0 50px;
   color:#3E3F41;
   margin-bottom:20px;
-  text-shadow:0 1px rgba(255,255,255,0.7);
+  text-shadow:0 1px rgba(255,255,255,0.7), 0 0 20px rgba(255,255,255,0.4);
 }
 
 #gallery {
