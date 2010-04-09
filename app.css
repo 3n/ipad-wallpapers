@@ -65,13 +65,33 @@ h1 {
   display:none;
 }
   
+#showcase-image {
+  -webkit-box-shadow:0 2px 7px rgba(0,0,0,0.4);
+  border:1px solid rgba(255,255,255,0.5);
+  margin-left:15px;
+  margin-top:10px;
+}
+  
 .vertical-orientation #showcase-image {
-  max-width:748px;  
+  max-width:718px;  
 }
 .horizontal-orientation #showcase-image {
-  max-width:1004px;
+  max-width:974px;
 }
 
+ol {
+  margin-top:8px;
+  color:#3E3F41;
+  line-height:1.5em;
+  font-weight:lighter;
+}
+#showcase-instructions p {
+  margin:0;
+  padding:0;
+  color:white !important;
+  font-weight:bold;
+  text-shadow:0 1px 2px rgba(0,0,0,0.5);
+}
 
 /*
 #showcase-wrapper {
