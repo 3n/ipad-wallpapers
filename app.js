@@ -1,8 +1,26 @@
+// orientation stuff
+function handle_orientation(){
+  var setOrientationClass = function(){
+    if (window.orientation === 0 || window.orientation === 180)
+      document.body.addClass('vertical-orientation').removeClass('horizontal-orientation');
+    else
+      document.body.removeClass('vertical-orientation').addClass('horizontal-orientation');      
+  };
+
+  Element.NativeEvents['orientationchange'] = 2;
+  window.addEvent('orientationchange', setOrientationClass);
+  setOrientationClass();
+}
+
+
+// domready
 window.addEvent('domready', function(){
+  handle_orientation();
+  
   $('showcase-wrapper').addEvent('click', function(){ 
     this.removeClass('showing'); 
   });
-  
+
   new Request.JSONP({
     url : "http://api.flickr.com/services/rest/",
     globalFunction : 'jsonFlickrApi',
@@ -10,7 +28,7 @@ window.addEvent('domready', function(){
              method      : 'flickr.photosets.getPhotos', 
              api_key     : 'f31a8e4819faa5ec28ed3db580b76fb9',
              media       : 'photos',
-             extras      : 'date_taken,owner_name,tags',             
+             extras      : 'tags',             
              lang        : "en-us",
 						 format      : 'json' },
     onComplete: function(resp){

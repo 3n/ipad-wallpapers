@@ -6,11 +6,15 @@ body {
   color:#222;
 }
 
+
 #wrapper {
   padding:10px;
   margin: 0 auto;
   width:748px;
 }
+  .horizontal-orientation #wrapper {
+    width:1024px;
+  }
 
 h1 {
   font-size:25px;
