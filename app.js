@@ -16,11 +16,11 @@ window.addEvent('domready', function(){
     onComplete: function(resp){
       $('gallery').set('html',
         resp.photoset.photo.map(function(photo){
-          return "<img src='http://farm{farm}.static.flickr.com/{server}/{id}_{secret}_t.jpg'/>".substitute(photo);
+          return "<img src='http://farm{farm}.static.flickr.com/{server}/{id}_{secret}_m.jpg'/>".substitute(photo);
         }).reverse()
       );
       
-      $('gallery').getChildren().thumbnail(100,100,'thumb');
+      $('gallery').getChildren().thumbnail(100,100,'thumb',240,240);
       $('gallery').addEvent('click:relay(.thumb)', function(){
         var img = this.getFirst();
         $('showcase-wrapper').addClass('showing').setStyle('top', window.getScrollTop());
