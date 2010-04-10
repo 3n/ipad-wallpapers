@@ -37,6 +37,58 @@ Element.Events.swipe = {
 
 
 
+var iPadGallery = new Class({
+  Implements: [Events, Options],
+  
+  initialize: function(elem, sce, si, photos_selector, options){
+    this.setOptions(options);
+    this.element  = document.id(elem); //outer
+    this.showcase_element = sce;
+    this.showcase_image = si;
+    this.photos_selector = photos_selector;
+    this.photos = this.element.getElements(this.photos_selector);
+    
+    this.attach();
+  },
+  
+  attach: function(){
+    var tmp = this;
+    this.element.addEvent('click:relay(' + this.photos_selector + ')', function(){
+      var index = this.retrieve('iPadGalleryIndex');
+          
+      tmp.showcase_element.addClass('showing').setStyle('top', window.getScrollTop());
+      var big_src = this.get('src').replace(/_\w\.jpg/,'_b.jpg'); // todo options func
+      
+      this.spin(); // todo events
+      new Asset.image(big_src, {
+        onload: function(){
+          this.unspin(); // todo events
+          tmp.showcase_element.setStyle('display','block');
+          tmp.showcase_image.set('src', big_src).store('iPadGalleryIndex', index);
+          tmp.element.addClass.delay(200, tmp.element, 'right');
+        }.bind(this)
+      });
+    });
+    
+    this.showcase_image.addEvent('click', function(){
+      this.element.removeClass('right');
+      this.showcase_element.setStyle.delay(500, this.showcase_element, ['display','none']);
+    }.bind(this));
+
+    this.showcase_image.addEvent('swipe', function(info){
+      if (info.direction === 'right')
+        var new_index = this.retrieve('iPadGalleryIndex')-1;
+      else if (info.direction === 'left')
+        var new_index = this.retrieve('iPadGalleryIndex')+1;
+
+      this.store('iPadGalleryIndex', new_index)
+      this.set('src', tmp.photos[new_index].get('src').replace(/_\w\.jpg/,'_b.jpg'))
+    });
+  }
+})
+
+
+
 
 
 // orientation stuff
@@ -81,45 +133,49 @@ window.addEvent('domready', function(){
         }).reverse()
       );
       
+      
+      
       var pics = $('gallery').getChildren();
       pics.each(function(child, i){
-        pics.push( child.thumbnail(100,100,'thumb',240,240).store('galleryIndex', i) );
+        pics.push( child.thumbnail(100,100,'thumb',240,240).store('iPadGalleryIndex', i) );
       });
       
-      $('gallery').addEvent('click:relay(.thumb)', function(){
-        var index = this.retrieve('galleryIndex'),
-            img = this.getFirst();
-            
-        $('showcase-wrapper').addClass('showing').setStyle('top', window.getScrollTop());
-        var big_src = img.get('src').replace(/_\w\.jpg/,'_b.jpg');
-        
-        img.spin();
-        new Asset.image(big_src, {
-          onload: function(){
-            img.unspin();
-            $('showcase-wrapper').setStyle('display','block');
-            $('showcase-image').set('src', big_src).store('galleryIndex', index);
-            $('outer').addClass.delay(200, $('outer'), 'right');
-          }
-        });
-      });
+      new iPadGallery($('outer'), $('showcase-wrapper'), $('showcase-image'), '.thumb img');
       
-      $('showcase-image').addEvent('click', function(){
-        $('outer').removeClass('right');
-        $('showcase-wrapper').setStyle.delay(500, $('showcase-wrapper'), ['display','none']);
-      });
+      // $('gallery').addEvent('click:relay(.thumb)', function(){
+      //   var index = this.retrieve('galleryIndex'),
+      //       img = this.getFirst();
+      //       
+      //   $('showcase-wrapper').addClass('showing').setStyle('top', window.getScrollTop());
+      //   var big_src = img.get('src').replace(/_\w\.jpg/,'_b.jpg');
+      //   
+      //   img.spin();
+      //   new Asset.image(big_src, {
+      //     onload: function(){
+      //       img.unspin();
+      //       $('showcase-wrapper').setStyle('display','block');
+      //       $('showcase-image').set('src', big_src).store('galleryIndex', index);
+      //       $('outer').addClass.delay(200, $('outer'), 'right');
+      //     }
+      //   });
+      // });
       
-      $('showcase-image').addEvent('swipe', function(info){
-        console.log(info.direction)
-        if (info.direction === 'left')
-          var new_index = this.retrieve('galleryIndex')-1;
-
-        else   if (info.direction === 'right')
-          var new_index = this.retrieve('galleryIndex')+1;
-
-this.store('galleryIndex', new_index)
-          this.set('src', pics[new_index].get('src').replace(/_\w\.jpg/,'_b.jpg'))
-      });
+//       $('showcase-image').addEvent('click', function(){
+//         $('outer').removeClass('right');
+//         $('showcase-wrapper').setStyle.delay(500, $('showcase-wrapper'), ['display','none']);
+//       });
+//       
+//       $('showcase-image').addEvent('swipe', function(info){
+//         console.log(info.direction)
+//         if (info.direction === 'left')
+//           var new_index = this.retrieve('galleryIndex')-1;
+// 
+//         else   if (info.direction === 'right')
+//           var new_index = this.retrieve('galleryIndex')+1;
+// 
+// this.store('galleryIndex', new_index)
+//           this.set('src', pics[new_index].get('src').replace(/_\w\.jpg/,'_b.jpg'))
+//       });
       
       window.addEvent('orientationchange', function(){
         window.scrollTo(0, window.getScroll().y);
