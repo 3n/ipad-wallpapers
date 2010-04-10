@@ -60,6 +60,10 @@ window.addEvent('domready', function(){
         $('outer').removeClass('right');
         $('showcase-wrapper').setStyle.delay(500, $('showcase-wrapper'), ['display','none']);
       });
+      
+      window.addEvent('orientationchange', function(){
+        window.scrollTo(0, window.getScroll().y);
+      });
     }
   }).send();
 });
