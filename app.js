@@ -135,17 +135,20 @@ var iPadGallery = new Class({
   updateShowcaseImage: function(){
     var current_photo = this.photos[this.current_index],
         new_src = this.options.getLargeSrc(current_photo);
-        
+
     this.showcase_image.set('src', new_src);
+
+    // todo make a showcase image wrapper with the swipe events and such and add/remove image elements
+    
     this.preloadNeighbors();
   },
   
   preloadNeighbors: function(){
     var preload = [];
     if (this.current_index > 0)
-      preload.push(this.options.getLargeSrc(this.photos[this.current_index + 1]));
-    if (this.current_index < this.photos.length - 1)
       preload.push(this.options.getLargeSrc(this.photos[this.current_index - 1]));
+    if (this.current_index < this.photos.length - 1)
+      preload.push(this.options.getLargeSrc(this.photos[this.current_index + 1]));
       
     new Asset.images(preload);
   }
