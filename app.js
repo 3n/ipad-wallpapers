@@ -71,6 +71,17 @@ var iPadGallery = new Class({
     this.attach();
   },
   
+  setPhotos: function(photos){
+    this.photos = photos || this.gallery_element.getElements(this.photos_selector);
+    
+    this.photos.each(function(photo, i){
+      this.fireEvent('photoAdded', photo);
+      photo.store('iPadGalleryIndex', i);
+    }, this);
+    
+    return this;
+  },
+  
   attach: function(){
     var thiz = this;
     
@@ -124,17 +135,6 @@ var iPadGallery = new Class({
         new_src = this.options.getLargeSrc(current_photo);
         
     this.showcase_image.set('src', new_src);
-  },
-  
-  setPhotos: function(photos){
-    this.photos = photos || this.gallery_element.getElements(this.photos_selector);
-    
-    this.photos.each(function(photo, i){
-      this.fireEvent('photoAdded', photo);
-      photo.store('iPadGalleryIndex', i);
-    }, this);
-    
-    return this;
   }
 });
 
