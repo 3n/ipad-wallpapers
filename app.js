@@ -54,6 +54,8 @@ function handle_orientation(){
 }
 
 
+
+
 // domready
 window.addEvent('domready', function(){
   handle_orientation();
@@ -79,10 +81,15 @@ window.addEvent('domready', function(){
         }).reverse()
       );
       
-      $('gallery').getChildren().thumbnail(100,100,'thumb',240,240);
+      var pics = $('gallery').getChildren();
+      pics.each(function(child, i){
+        pics.push( child.thumbnail(100,100,'thumb',240,240).store('galleryIndex', i) );
+      });
       
       $('gallery').addEvent('click:relay(.thumb)', function(){
-        var img = this.getFirst();
+        var index = this.retrieve('galleryIndex'),
+            img = this.getFirst();
+            
         $('showcase-wrapper').addClass('showing').setStyle('top', window.getScrollTop());
         var big_src = img.get('src').replace(/_\w\.jpg/,'_b.jpg');
         
@@ -91,7 +98,7 @@ window.addEvent('domready', function(){
           onload: function(){
             img.unspin();
             $('showcase-wrapper').setStyle('display','block');
-            $('showcase-image').set('src', big_src);        
+            $('showcase-image').set('src', big_src).store('galleryIndex', index);
             $('outer').addClass.delay(200, $('outer'), 'right');
           }
         });
@@ -103,7 +110,15 @@ window.addEvent('domready', function(){
       });
       
       $('showcase-image').addEvent('swipe', function(info){
-        console.log(info);
+        console.log(info.direction)
+        if (info.direction === 'left')
+          var new_index = this.retrieve('galleryIndex')-1;
+
+        else   if (info.direction === 'right')
+          var new_index = this.retrieve('galleryIndex')+1;
+
+this.store('galleryIndex', new_index)
+          this.set('src', pics[new_index].get('src').replace(/_\w\.jpg/,'_b.jpg'))
       });
       
       window.addEvent('orientationchange', function(){
