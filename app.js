@@ -1,3 +1,14 @@
+/*
+---
+script: Element.SwipeEvent.js
+
+description: adds the 'swipe' event to Element.addEvent.
+usage: element.addEvent('swipe', function)
+       the function will be passed an object containing:
+          direction ('left' or 'right'), startX and endX.
+...
+*/
+
 ['touchstart', 'touchmove', 'touchend'].each(function(type){
   Element.NativeEvents[type] = 2;
 });
@@ -83,7 +94,7 @@ var iPadGallery = new Class({
           this.current_index = this.photos.length - 1;
         else
           this.updateShowcaseImage();
-    }.bind(this));
+      }.bind(this));
     
     return this;
   },
