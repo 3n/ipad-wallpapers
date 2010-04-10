@@ -127,6 +127,8 @@ var iPadGallery = new Class({
         });
         this.showcase_image.set('src', big_src);
         this.element.addClass.delay(200, this.element, 'right');
+
+        this.preloadNeighbors();
       }.bind(this)
     });
   },
@@ -135,6 +137,17 @@ var iPadGallery = new Class({
         new_src = this.options.getLargeSrc(current_photo);
         
     this.showcase_image.set('src', new_src);
+    this.preloadNeighbors();
+  },
+  
+  preloadNeighbors: function(){
+    var preload = [];
+    if (this.current_index > 0)
+      preload.push(this.options.getLargeSrc(this.photos[this.current_index + 1]));
+    if (this.current_index < this.photos.length - 1)
+      preload.push(this.options.getLargeSrc(this.photos[this.current_index - 1]));
+      
+    new Asset.images(preload);
   }
 });
 
@@ -200,6 +213,7 @@ window.addEvent('domready', function(){
             ipg.photos[ipg.current_index].unspin();
           },
           getLargeSrc : function(img){
+            console.log(img)
             return img.get('src').replace(/_\w\.jpg/,'_b.jpg');
           }
         }
