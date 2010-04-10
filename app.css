@@ -22,8 +22,6 @@ body {
 
 
 #wrapper {
-  padding:10px;
-/*  margin: 0 auto;*/
   position:relative;
 }
   .wrapper {
@@ -31,6 +29,9 @@ body {
   }
   .horizontal-orientation .wrapper {
     width:1024px;
+  }
+  .vertical-orientation .wrapper {
+    padding-left:10px;
   }
 
 h1 {
