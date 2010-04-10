@@ -16,22 +16,21 @@ body {
   -webkit-transform: translate3d(-768px,0,0);
 }
 .horizontal-orientation #outer.right {
-  -webkit-transform: translate3d(-1044px,0,0);
+  -webkit-transform: translate3d(-1024px,0,0);
 }
 
 
 
-#wrapper {
+.wrapper {
   position:relative;
+  width:748px;  
 }
-  .wrapper {
-    width:748px;
-  }
   .horizontal-orientation .wrapper {
     width:1024px;
   }
   .vertical-orientation .wrapper {
     padding-left:10px;
+    width:758px;    
   }
 
 h1 {
@@ -69,8 +68,8 @@ h1 {
 #showcase-image {
   -webkit-box-shadow:0 2px 7px rgba(0,0,0,0.4);
   border:1px solid rgba(255,255,255,0.5);
-  margin-left:15px;
-  margin-top:10px;
+  margin-left:14px;
+  margin-top:5px;
 }
   
 .vertical-orientation #showcase-image {
