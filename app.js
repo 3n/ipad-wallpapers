@@ -213,7 +213,6 @@ window.addEvent('domready', function(){
             ipg.photos[ipg.current_index].unspin();
           },
           getLargeSrc : function(img){
-            console.log(img)
             return img.get('src').replace(/_\w\.jpg/,'_b.jpg');
           }
         }
