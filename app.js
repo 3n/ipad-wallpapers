@@ -1,3 +1,44 @@
+['touchstart', 'touchmove', 'touchend'].each(function(type){
+  Element.NativeEvents[type] = 2;
+});
+
+Element.Events.swipe = {
+  base : 'touchstart',
+  condition : function(event) {
+    this.store('swipeStartX', event.event.touches[0].pageX);
+    this.store('swipeStartY', event.event.touches[0].pageY);    
+    return false;
+  },
+  onAdd: function(fn){
+    this.addEvent('touchmove', function(event){
+      var startX = this.retrieve('swipeStartX'),
+          startY = this.retrieve('swipeStartY'),
+          endX   = event.event.touches[0].pageX,
+          endY   = event.event.touches[0].pageY,          
+          diff   = endX - startX,
+          isLeftSwipe = diff < -70,
+          isRightSwipe = diff > 70;
+      
+      if (this.retrieve('swipeStartX') && (isRightSwipe || isLeftSwipe)){
+        this.store('swipeStartX', false);
+        fn.call(this, {
+          'direction' : isRightSwipe ? 'right' : 'left', 
+          'startX'    : startX,
+          'endX'      : endX
+        });
+      }
+      
+      if (Math.abs(startY - endY) < Math.abs(startX - endX))
+        return false;
+    });
+  }
+};
+
+
+
+
+
+
 // orientation stuff
 function handle_orientation(){
   var setOrientationClass = function(){
@@ -59,6 +100,10 @@ window.addEvent('domready', function(){
       $('showcase-image').addEvent('click', function(){
         $('outer').removeClass('right');
         $('showcase-wrapper').setStyle.delay(500, $('showcase-wrapper'), ['display','none']);
+      });
+      
+      $('showcase-image').addEvent('swipe', function(info){
+        console.log(info);
       });
       
       window.addEvent('orientationchange', function(){

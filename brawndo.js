@@ -5323,3 +5323,19 @@ Element.implement({
 	}
 
 });
+/*
+Script: Event.addEventOnce.js
+	Extends the Event class (using .implement) with a method to add an event only once.
+*/
+
+Event.implement({
+	addEventOnce: function(type, func){		
+		this.addEvent(type, function(e){ func(e); this.removeEvent(type, arguments.callee) });
+		return this;
+	}	
+});
+
+Native.implement([Element, Window, Document], {
+	addEventOnce: Event.prototype.addEventOnce
+});
+
