@@ -5339,3 +5339,50 @@ Native.implement([Element, Window, Document], {
 	addEventOnce: Event.prototype.addEventOnce
 });
 
+['touchstart', 'touchmove', 'touchend'].each(function(type){
+  Element.NativeEvents[type] = 2;
+});
+
+Element.Events.swipe = {
+  base : 'touchstart',
+  condition : function(event) {
+    return false;
+  },
+  onAdd: function(fn){
+    var startX, startY, active = false;
+
+    this.addEvent('touchstart', function(event){
+      active = true;
+      startX = event.event.touches[0].pageX;
+      startY = event.event.touches[0].pageY;
+    });
+    
+    this.addEvent('touchmove', function(event){
+      var endX   = event.event.touches[0].pageX,
+          endY   = event.event.touches[0].pageY,          
+          diff   = endX - startX,
+          isLeftSwipe = diff < -1 * Element.Events.swipe.swipeWidth,
+          isRightSwipe = diff > Element.Events.swipe.swipeWidth;
+
+      if (active && (isRightSwipe || isLeftSwipe)          
+          && (event.onlySwipeLeft ? isLeftSwipe : true)
+          && (event.onlySwipeRight ? isRightSwipe : true) ){
+        active = false;
+        fn.call(this, {
+          'direction' : isRightSwipe ? 'right' : 'left', 
+          'startX'    : startX,
+          'endX'      : endX
+        });
+      }
+      
+      if (Element.Events.swipe.cancelVertical
+          && Math.abs(startY - endY) < Math.abs(startX - endX)){
+        return false;
+      }
+    });
+  }
+};
+
+Element.Events.swipe.swipeWidth = 70;
+Element.Events.swipe.cancelVertical = true;
+
