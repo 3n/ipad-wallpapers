@@ -59,6 +59,10 @@ var iPadGallery = new Class({
       thiz.openShowcase();
     });
     
+    $('open-large').addEvent('click', function(){
+      window.open(this.options.getLargeSrc(this.photos[this.current_index]))
+    }.bind(this))
+    
     this.showcase_image_wrapper
       .addEvent('click', this.showGallery.bind(this))
       .addEvent('swipe', function(info){
