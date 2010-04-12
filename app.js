@@ -20,7 +20,8 @@ var iPadGallery = new Class({
       return img.get('src');
     },
     showcaseImageClass : 'showcase-image',
-    photosSelector : 'img'
+    photosSelector : 'img',
+    preload : true
   },
   
   current_index : 0,
@@ -56,12 +57,8 @@ var iPadGallery = new Class({
     this.gallery_element.addEvent('click:relay(' + this.options.photosSelector + ')', function(){
       thiz.fireEvent('photoClicked', this);
       thiz.current_index = this.retrieve('iPadGalleryIndex');
-      thiz.openShowcase();
+      thiz.updateShowcaseImage();
     });
-    
-    $('open-large').addEvent('click', function(){
-      window.open(this.options.getLargeSrc(this.photos[this.current_index]))
-    }.bind(this))
     
     this.showcase_image_wrapper
       .addEvent('click', this.showGallery.bind(this))
@@ -76,58 +73,50 @@ var iPadGallery = new Class({
         else if (this.current_index > this.photos.length - 1)
           this.current_index = this.photos.length - 1;
         else
-          this.updateShowcaseImage();
+          this.updateShowcaseImage(info.direction);
       }.bind(this));
     
+      this.showcase_image.addEvent('load', this._isLoaded.bind(this));
+    
     return this;
+  },
+  _isLoaded: function(){
+    this.fireEvent('showcaseWillOpen', this);
+    this.showcase_element.setStyles({
+      'display' : 'block',
+      'top'     : window.getScrollTop()
+    });
+    this.element.addClass.delay(200, this.element, 'right');
   },
   
   showGallery: function(){
     this.element.removeClass('right');
     this.showcase_element.setStyle.delay(500, this.showcase_element, ['display','none']);
   },
-  openShowcase: function(){
+
+  updateShowcaseImage: function(dir){
     var current_photo = this.photos[this.current_index],
-        big_src = this.options.getMediumSrc(current_photo);
+        new_src = this.options.getLargeSrc(current_photo);
 
-    new Asset.image(big_src, {
-      onload : function(){
-        this.fireEvent('showcaseWillOpen', this);
-        this.showcase_element.setStyles({
-          'display' : 'block',
-          'top'     : window.getScrollTop()
-        });
-        this.showcase_image.set('src', big_src);
-        this.element.addClass.delay(200, this.element, 'right');
-
-        this.preloadNeighbors();
-      }.bind(this)
-    });
-  },
-  updateShowcaseImage: function(){
-    var current_photo = this.photos[this.current_index],
-        new_src = this.options.getMediumSrc(current_photo);
-
-    // this.showcase_image.destroy();
-    // (function(){
-    //   this.showcase_image = new Element('img', {
-    //     'class': this.options.showcaseImageClass
-    //   }).set('src', new_src)
-    //     .inject(this.showcase_image_wrapper);
-    // }).delay(0, this);
-      
+    // this.showcase_image.set('src', new_src);
+    // if (this.showcase_image.complete) this._isLoaded();
+    
+    // this.showcase_image.set('src', 'javascript:void(0)').destroy();
+    // if (dir === 'right' && this.preloadRight){
+    //   this.showcase_image = this.preloadRight.replaces(this.showcase_image);
+    //   this.preloadRight.set('src', 'javascript:void(0)').destroy();
+    // } else
+    
     this.showcase_image.set('src', new_src);    
-    this.preloadNeighbors();
-  },
-  
-  preloadNeighbors: function(){
-    var preload = [];
-    if (this.current_index > 0)
-      preload.push(this.options.getMediumSrc(this.photos[this.current_index - 1]));
-    if (this.current_index < this.photos.length - 1)
-      preload.push(this.options.getMediumSrc(this.photos[this.current_index + 1]));
-      
-    new Asset.images(preload);
+    if (this.showcase_image.complete) this._isLoaded();
+
+    // this.preloadRight = new Element('img', {
+    //   'class' : this.options.showcaseImageClass, 
+    //   'style' : {visibility: 'hidden'}
+    // }).inject(document.body);
+    // 
+    // if (this.current_index < this.photos.length - 1)
+    //   this.preloadRight.set('src', this.options.getLargeSrc(this.photos[this.current_index + 1]));
   }
 });
 
