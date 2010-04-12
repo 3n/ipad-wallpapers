@@ -65,17 +65,17 @@ h1 {
   display:none;
 }
   
-#showcase-image {
+.showcase-image {
   -webkit-box-shadow:0 2px 7px rgba(0,0,0,0.4);
   border:1px solid rgba(255,255,255,0.5);
   margin-left:14px;
   margin-top:5px;
 }
   
-.vertical-orientation #showcase-image {
+.vertical-orientation .showcase-image {
   max-width:718px;  
 }
-.horizontal-orientation #showcase-image {
+.horizontal-orientation .showcase-image {
   max-width:974px;
 }
 

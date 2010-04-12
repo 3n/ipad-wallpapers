@@ -4,26 +4,29 @@ var iPadGallery = new Class({
   options : {
     getLargeSrc : function(img){
       return img.get('src');
-    }
+    },
+    showcaseImageClass : 'showcase-image',
+    photosSelector : 'img'
   },
   
   current_index : 0,
   
-  initialize: function(elem, ge, sce, si, photos_selector, options){
+  initialize: function(elem, ge, sce, options){
     this.setOptions(options);
     this.element          = document.id(elem);
     this.gallery_element  = document.id(ge);
-    this.showcase_element = document.id(sce);
-    this.showcase_image   = document.id(si);
-    this.photos_selector  = photos_selector;
+    this.showcase_element = document.id(sce);    
+    this.showcase_image   = new Element('img', {
+                              'class': this.options.showcaseImageClass
+                            }).inject(this.showcase_element, 'top');
     
     this.setPhotos();
     this.attach();
   },
   
   setPhotos: function(photos){
-    this.photos = photos || this.gallery_element.getElements(this.photos_selector);
-    
+    this.photos = photos || this.gallery_element.getElements(this.options.photosSelector);
+
     this.photos.each(function(photo, i){
       this.fireEvent('photoAdded', photo);
       photo.store('iPadGalleryIndex', i);
@@ -35,7 +38,7 @@ var iPadGallery = new Class({
   attach: function(){
     var thiz = this;
     
-    this.gallery_element.addEvent('click:relay(' + this.photos_selector + ')', function(){
+    this.gallery_element.addEvent('click:relay(' + this.options.photosSelector + ')', function(){
       thiz.fireEvent('photoClicked', this);
       thiz.current_index = this.retrieve('iPadGalleryIndex');
       thiz.openShowcase();
@@ -152,9 +155,7 @@ window.addEvent('domready', function(){
       new iPadGallery(
         $('outer'), 
         $('gallery'), 
-        $('showcase-wrapper'), 
-        $('showcase-image'), 
-        'img', 
+        $('showcase-wrapper'),
         {
           onPhotoAdded : function(photo){
             photo.thumbnail(100,100,'thumb',240,240);
