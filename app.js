@@ -1,8 +1,22 @@
+// Element.Events.tap = {
+//   base : 'touchstart',
+//   condition : function(event) {
+//     return false;
+//   },
+//   onAdd: function(fn){
+//   
+//   }
+// };
+
+
 var iPadGallery = new Class({
   Implements: [Events, Options],
   
   options : {
     getLargeSrc : function(img){
+      return img.get('src');
+    },
+    getMediumSrc : function(img){
       return img.get('src');
     },
     showcaseImageClass : 'showcase-image',
@@ -15,10 +29,11 @@ var iPadGallery = new Class({
     this.setOptions(options);
     this.element          = document.id(elem);
     this.gallery_element  = document.id(ge);
-    this.showcase_element = document.id(sce);    
+    this.showcase_element = document.id(sce);
+    this.showcase_image_wrapper = new Element('div').inject(this.showcase_element, 'top');
     this.showcase_image   = new Element('img', {
                               'class': this.options.showcaseImageClass
-                            }).inject(this.showcase_element, 'top');
+                            }).inject(this.showcase_image_wrapper);
     
     this.setPhotos();
     this.attach();
@@ -44,7 +59,7 @@ var iPadGallery = new Class({
       thiz.openShowcase();
     });
     
-    this.showcase_image
+    this.showcase_image_wrapper
       .addEvent('click', this.showGallery.bind(this))
       .addEvent('swipe', function(info){
         if (info.direction === 'right')
@@ -69,7 +84,7 @@ var iPadGallery = new Class({
   },
   openShowcase: function(){
     var current_photo = this.photos[this.current_index],
-        big_src = this.options.getLargeSrc(current_photo);
+        big_src = this.options.getMediumSrc(current_photo);
 
     new Asset.image(big_src, {
       onload : function(){
@@ -87,21 +102,26 @@ var iPadGallery = new Class({
   },
   updateShowcaseImage: function(){
     var current_photo = this.photos[this.current_index],
-        new_src = this.options.getLargeSrc(current_photo);
+        new_src = this.options.getMediumSrc(current_photo);
 
-    this.showcase_image.set('src', new_src);
-
-    // todo make a showcase image wrapper with the swipe events and such and add/remove image elements
-    
+    // this.showcase_image.destroy();
+    // (function(){
+    //   this.showcase_image = new Element('img', {
+    //     'class': this.options.showcaseImageClass
+    //   }).set('src', new_src)
+    //     .inject(this.showcase_image_wrapper);
+    // }).delay(0, this);
+      
+    this.showcase_image.set('src', new_src);    
     this.preloadNeighbors();
   },
   
   preloadNeighbors: function(){
     var preload = [];
     if (this.current_index > 0)
-      preload.push(this.options.getLargeSrc(this.photos[this.current_index - 1]));
+      preload.push(this.options.getMediumSrc(this.photos[this.current_index - 1]));
     if (this.current_index < this.photos.length - 1)
-      preload.push(this.options.getLargeSrc(this.photos[this.current_index + 1]));
+      preload.push(this.options.getMediumSrc(this.photos[this.current_index + 1]));
       
     new Asset.images(preload);
   }
@@ -148,7 +168,7 @@ window.addEvent('domready', function(){
     onComplete: function(resp){
       $('gallery').set('html',
         resp.photoset.photo.map(function(photo){
-          return "<img src='http://farm{farm}.static.flickr.com/{server}/{id}_{secret}_m.jpg'/>".substitute(photo);
+          return "<img src='http://farm{farm}.static.flickr.com/{server}/{id}_{secret}_t.jpg'/>".substitute(photo);
         }).reverse()
       );
 
@@ -158,7 +178,7 @@ window.addEvent('domready', function(){
         $('showcase-wrapper'),
         {
           onPhotoAdded : function(photo){
-            photo.thumbnail(100,100,'thumb',240,240);
+            photo.thumbnail(100,100,'thumb',100,100);
           },
           onPhotoClicked : function(photo){
             photo.spin();
@@ -168,6 +188,9 @@ window.addEvent('domready', function(){
           },
           getLargeSrc : function(img){
             return img.get('src').replace(/_\w\.jpg/,'_b.jpg');
+          },
+          getMediumSrc : function(img){
+            return img.get('src').replace(/_\w\.jpg/,'.jpg');            
           }
         }
       );
