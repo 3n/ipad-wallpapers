@@ -35,19 +35,19 @@ body {
 
 h1 {
   font-size:25px;
-  margin:10px 0 40px 50px;
+  margin:15px 0 20px 35px;
   color:#3E3F41;
   text-shadow:0 1px rgba(255,255,255,0.7), 0 0 20px rgba(255,255,255,0.4);
 }
 
 #gallery {
   overflow:auto;
-  padding: 0 34px;
+  padding: 0 15px;
 }
 
 #gallery .thumb {
   float:left;
-  margin: 0 15px 30px 15px;
+  margin: 0 18px 30px 18px;
   border:3px solid #f0f0f0;  
   -webkit-border-radius: 3px;
   -webkit-box-shadow:0 4px 7px rgba(0,0,0,0.4);
