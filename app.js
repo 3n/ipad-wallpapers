@@ -98,23 +98,14 @@ var iPadGallery = new Class({
     var current_photo = this.photos[this.current_index],
         new_src = this.options.getLargeSrc(current_photo);
 
-    // this.showcase_image.set('src', new_src);
-    // if (this.showcase_image.complete) this._isLoaded();
-    
-    // this.showcase_image.set('src', 'javascript:void(0)').destroy();
-    // if (dir === 'right' && this.preloadRight){
-    //   this.showcase_image = this.preloadRight.replaces(this.showcase_image);
-    //   this.preloadRight.set('src', 'javascript:void(0)').destroy();
-    // } else
-    
     this.showcase_image.set('src', new_src);    
     if (this.showcase_image.complete) this._isLoaded();
 
-    // this.preloadRight = new Element('img', {
+    // this.preloadRight = this.preloadRight || new Element('img', {
     //   'class' : this.options.showcaseImageClass, 
     //   'style' : {visibility: 'hidden'}
     // }).inject(document.body);
-    // 
+    
     // if (this.current_index < this.photos.length - 1)
     //   this.preloadRight.set('src', this.options.getLargeSrc(this.photos[this.current_index + 1]));
   }
