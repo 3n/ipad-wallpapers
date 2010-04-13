@@ -5393,6 +5393,11 @@ Element.Events.tap = {
     var startScrollY,
         activeClass = Element.Events.tap.tapEventActiveClass;
         
+    var cancelTap = function(){
+      this.removeClass(Element.Events.tap.tapEventActiveClass);
+      this.removeEvent('touchend', endFn);
+      this.removeEvent('touchmove', scrollFn);
+    };
     var startFn = function(event){
       startScrollY = window.pageYOffset;
       this.addClass(Element.Events.tap.tapEventActiveClass)
@@ -5412,13 +5417,12 @@ Element.Events.tap = {
       if (startScrollY !== window.pageYOffset 
           || !(pageX > left && pageX < left + this.getWidth())
           || !(pageY > top && pageY < top + this.getHeight())){
-        this.removeClass(Element.Events.tap.tapEventActiveClass);
-        this.removeEvent('touchend', endFn);
-        this.removeEvent('touchmove', scrollFn);
+            cancelTap()
       }
     };
     
     this.addEvent('touchstart', startFn);
+    if (Element.Events.swipe) this.addEvent('swipe', cancelTap);
     
     var tapAddedEvents = {};
     tapAddedEvents[fn] = {
