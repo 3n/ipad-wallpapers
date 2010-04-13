@@ -22,7 +22,7 @@ provides: [MooTools, Native, Hash.base, Array.each, $util]
 
 var MooTools = {
 	'version': '1.2.5dev',
-	'build': '49013792f24d6d562ab76495cc3d6104e76e04be'
+	'build': 'facd76c592644d128070c546f726e8c980b532ba'
 };
 
 var Native = function(options){
