@@ -123,21 +123,40 @@ ol {
 
 .spinner {
 	position: absolute;
-	opacity: 0.3 !important;
+	opacity: 1 !important;
 	z-index: 999;
-	background: #fff;
+  background:transparent;
 }
 .spinner-msg {
 	text-align: center;
 	font-weight: bold;
 }
 
+@-webkit-keyframes throb {
+	0% {
+		-webkit-transform:scale(1);
+    -webkit-box-shadow:0 0 5px rgba(0,0,0,0.5);		
+	}
+	50% {
+		-webkit-transform:scale(1.5);
+    -webkit-box-shadow:0 8px 5px rgba(0,0,0,0.8);		
+	}
+	100% {
+		-webkit-transform:scale(1);
+    -webkit-box-shadow:0 0 5px rgba(0,0,0,0.5);		
+	}
+}
+
 .spinner-img {
-	background: url(spinner.gif) no-repeat;
-	width: 24px;
-	height: 24px;
+  -webkit-border-radius:20px;
+  -webkit-box-shadow:0 0 5px rgba(0,0,0,0.5);
+  -webkit-animation-name: throb;
+  -webkit-animation-duration: 1s;
+  -webkit-animation-iteration-count: infinite;
+  -webkit-animation-timing-function: ease-in-out;
+  background:rgba(255,255,255,0.8);
+	width: 20px;
+	height: 20px;
 	margin: 0 auto;
 }
 
-
-body.tapEventActive { background:red;}
