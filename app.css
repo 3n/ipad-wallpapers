@@ -126,7 +126,7 @@ ol {
 
 .spinner {
 	position: absolute;
-	opacity: 0.6 !important;
+	opacity: 0.3 !important;
 	z-index: 999;
 	background: #fff;
 }
@@ -141,3 +141,6 @@ ol {
 	height: 24px;
 	margin: 0 auto;
 }
+
+
+body.tapEventActive { background:red;}

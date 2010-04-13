@@ -22,7 +22,7 @@ provides: [MooTools, Native, Hash.base, Array.each, $util]
 
 var MooTools = {
 	'version': '1.2.5dev',
-	'build': '71d0c4d80abee3c9c2e5a3396dc274dc58b7ea74'
+	'build': '49013792f24d6d562ab76495cc3d6104e76e04be'
 };
 
 var Native = function(options){
@@ -5344,10 +5344,6 @@ Native.implement([Element, Window, Document], {
 });
 
 Element.Events.swipe = {
-  base : 'touchstart',
-  condition : function(event) {
-    return false;
-  },
   onAdd: function(fn){
     var startX, startY, active = false;
 
@@ -5386,3 +5382,48 @@ Element.Events.swipe = {
 Element.Events.swipe.swipeWidth = 70;
 Element.Events.swipe.cancelVertical = true;
 
+['touchstart', 'touchmove', 'touchend'].each(function(type){
+  Element.NativeEvents[type] = 2;
+});
+
+Element.Events.tap = {
+  tapEventActiveClass : 'tapEventActive',
+  
+  onAdd: function(fn){
+    var startScrollY,
+        activeClass = Element.Events.tap.tapEventActiveClass;
+        
+    var startFn = function(event){
+      startScrollY = window.pageYOffset;
+      this.addClass(Element.Events.tap.tapEventActiveClass)
+          .addEvent('touchend', endFn)
+          .addEvent('touchmove', scrollFn);
+    };
+    var endFn = function(event){
+      this.removeClass(activeClass);
+      fn.call(this);
+    };
+    var scrollFn = function(event){    
+      if (startScrollY !== window.pageYOffset){
+        this.removeClass(Element.Events.tap.tapEventActiveClass);
+        this.removeEvent('touchend', endFn);
+      }        
+    };
+    
+    this.addEvent('touchstart', startFn);
+    
+    var tapAddedEvents = {};
+    tapAddedEvents[fn] = {
+      'touchend'   : endFn,
+      'touchstart' : startFn,
+      'touchmove'  : scrollFn
+    };
+    this.store('tapAddedEvents', tapAddedEvents);
+  },
+  
+  onRemove: function(fn){
+    $H(this.retrieve('tapAddedEvents')[fn]).each(function(v,k){
+      this.removeEvent(k,v);
+    }, this);
+  }
+};
