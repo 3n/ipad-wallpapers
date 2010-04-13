@@ -38,7 +38,7 @@ var iPadGallery = new Class({
         this.fireEvent('photoTapped', photo);
         this.current_index = i;
         this.updateShowcaseImage();
-      }.bind(this));
+      }.bind(this));      
     }, this);
     
     return this;
