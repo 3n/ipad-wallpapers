@@ -39,9 +39,6 @@ var iPadGallery = new Class({
         this.current_index = i;
         this.updateShowcaseImage();
       }.bind(this));      
-    
-      if (i === 0) photo.spin();  
-      
     }, this);
     
     return this;
