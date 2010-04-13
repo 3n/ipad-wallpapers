@@ -1,13 +1,3 @@
-// Element.Events.tap = {
-//   base : 'touchstart',
-//   condition : function(event) {
-//     return false;
-//   },
-//   onAdd: function(fn){
-//   
-//   }
-// };
-
 var iPadGallery = new Class({
   Implements: [Events, Options],
   
@@ -44,7 +34,11 @@ var iPadGallery = new Class({
 
     this.photos.each(function(photo, i){
       this.fireEvent('photoAdded', photo);
-      photo.store('iPadGalleryIndex', i);
+      photo.addEvent('tap', function(){
+        this.fireEvent('photoTapped', photo);
+        this.current_index = i;
+        this.updateShowcaseImage();
+      }.bind(this));
     }, this);
     
     return this;
@@ -53,14 +47,8 @@ var iPadGallery = new Class({
   attach: function(){
     var thiz = this;
     
-    this.gallery_element.addEvent('click:relay(' + this.options.photosSelector + ')', function(){
-      thiz.fireEvent('photoClicked', this);
-      thiz.current_index = this.retrieve('iPadGalleryIndex');
-      thiz.updateShowcaseImage();
-    });
-    
     this.showcase_image_wrapper
-      .addEvent('click', this.showGallery.bind(this))
+      .addEvent('tap', this.showGallery.bind(this))
       .addEvent('swipe', function(info){
         if (info.direction === 'right')
           this.current_index -= 1;
@@ -165,7 +153,7 @@ window.addEvent('domready', function(){
           onPhotoAdded : function(photo){
             photo.thumbnail(100,100,'thumb',100,100);
           },
-          onPhotoClicked : function(photo){
+          onPhotoTapped : function(photo){
             photo.spin();
           },
           onShowcaseWillOpen : function(ipg){
