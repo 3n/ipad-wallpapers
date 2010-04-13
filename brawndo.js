@@ -22,7 +22,7 @@ provides: [MooTools, Native, Hash.base, Array.each, $util]
 
 var MooTools = {
 	'version': '1.2.5dev',
-	'build': '4965d217c7fbd288da4344a74ccbc83056ed7556'
+	'build': 'b40d261d9119d7d916fe38a67cb652b98689a787'
 };
 
 var Native = function(options){
@@ -5417,7 +5417,7 @@ Element.Events.tap = {
       if (startScrollY !== window.pageYOffset 
           || !(pageX > left && pageX < left + this.getWidth())
           || !(pageY > top && pageY < top + this.getHeight())){
-            cancelTap()
+            cancelTap.call(this);
       }
     };
     
