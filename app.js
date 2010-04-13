@@ -73,7 +73,7 @@ var iPadGallery = new Class({
       'display' : 'block',
       'top'     : window.getScrollTop()
     });
-    // this.showcase_image_wrapper.unspin();
+    this.showcase_image_wrapper.unspin();
     this.element.addClass.delay(200, this.element, 'right');
   },
   
@@ -88,7 +88,7 @@ var iPadGallery = new Class({
 
     this.showcase_image.set('src', new_src);    
     if (this.showcase_image.complete) this._isLoaded();
-    // else this.showcase_image_wrapper.spin();
+    else this.showcase_image_wrapper.spin();
 
     // this.preloadRight = this.preloadRight || new Element('img', {
     //   'class' : this.options.showcaseImageClass, 
