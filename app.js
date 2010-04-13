@@ -32,13 +32,16 @@ var iPadGallery = new Class({
   setPhotos: function(photos){
     this.photos = photos || this.gallery_element.getElements(this.options.photosSelector);
 
-    this.photos.each(function(photo, i){
+    this.photos.each(function(photo, i){      
       this.fireEvent('photoAdded', photo);
       photo.addEvent('tap', function(){
         this.fireEvent('photoTapped', photo);
         this.current_index = i;
         this.updateShowcaseImage();
       }.bind(this));      
+    
+      if (i === 0) photo.spin();  
+      
     }, this);
     
     return this;
