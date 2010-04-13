@@ -52,9 +52,6 @@ h1 {
   -webkit-border-radius: 3px;
   -webkit-box-shadow:0 4px 7px rgba(0,0,0,0.4);
 }
-#gallery .thumb.loading {
-  border-color:red;
-}
 
 #showcase-wrapper {
   padding:10px;

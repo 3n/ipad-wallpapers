@@ -5403,11 +5403,19 @@ Element.Events.tap = {
       this.removeClass(activeClass);
       fn.call(this);
     };
-    var scrollFn = function(event){    
-      if (startScrollY !== window.pageYOffset){
+    var scrollFn = function(event){
+      var pageX = event.event.touches[0].pageX,
+          pageY = event.event.touches[0].pageY,
+          left  = this.getLeft(),
+          top   = this.getTop();
+
+      if (startScrollY !== window.pageYOffset 
+          || !(pageX > left && pageX < left + this.getWidth())
+          || !(pageY > top && pageY < top + this.getHeight())){
         this.removeClass(Element.Events.tap.tapEventActiveClass);
         this.removeEvent('touchend', endFn);
-      }        
+        this.removeEvent('touchmove', scrollFn);
+      }
     };
     
     this.addEvent('touchstart', startFn);
