@@ -74,7 +74,7 @@ h1 {
   font-size:25px;
   padding:10px 0 10px 40px;
   
-  color:#343841;
+  color:#393939;
   text-shadow:0 1px rgba(255,255,255,0.7), 0 0 20px rgba(255,255,255,0.4);
   
 /*  color:#fff;
@@ -86,10 +86,10 @@ h1 {
 /*  text-align:center;*/
 }
   .horizontal-orientation h1 {
-    width:990px;
+    width:995px;
   }
   .vertical-orientation h1 {
-    width:723px;
+    width:728px;
   }
 
 #gallery {
