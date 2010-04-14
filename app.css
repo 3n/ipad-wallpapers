@@ -109,7 +109,7 @@ h1 {
   border-top:1px solid rgba(255,255,255,0.6);
   -webkit-box-shadow:0 2px 6px rgba(0,0,0,0.2), 0 0 2px black;
   background:-webkit-gradient(linear, 0% 0%, 0% 100%, from(rgba(0,0,0,0)), to(rgba(0,0,0,0.3))),
-             -webkit-gradient(linear, 0% 0%, 0% 100%, from(rgba(255,255,255,0.1)), to(rgba(0,0,0,0)));  
+             -webkit-gradient(linear, 0% 0%, 0% 70%, from(rgba(255,255,255,0.1)), to(rgba(0,0,0,0)));  
 }
   
 .top-button {
@@ -267,7 +267,7 @@ ol {
   display:none;
   border-top:1px solid rgba(0,0,0,0.3);
   font-size:14px;
-  color:rgba(0,0,0,0.7);
+  color:rgba(0,0,0,0.6);
 }
 
 
@@ -275,3 +275,6 @@ ol {
   float:right;
 }
 
+#ninjacam-plug img {
+  margin-bottom:-10px;
+}
