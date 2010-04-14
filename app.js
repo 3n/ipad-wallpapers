@@ -119,8 +119,6 @@ function handle_orientation(){
 }
 
 
-
-
 // domready
 window.addEvent('domready', function(){
   handle_orientation();

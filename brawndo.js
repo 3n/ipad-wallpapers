@@ -5347,13 +5347,12 @@ Element.Events.swipe = {
   onAdd: function(fn){
     var startX, startY, active = false;
 
-    this.addEvent('touchstart', function(event){
+    var touchStart = function(event){
       active = true;
       startX = event.event.touches[0].pageX;
       startY = event.event.touches[0].pageY;
-    });
-    
-    this.addEvent('touchmove', function(event){
+    };
+    var touchMove = function(event){
       var endX   = event.event.touches[0].pageX,
           endY   = event.event.touches[0].pageY,          
           diff   = endX - startX,
@@ -5375,7 +5374,23 @@ Element.Events.swipe = {
           && Math.abs(startY - endY) < Math.abs(startX - endX)){
         return false;
       }
-    });
+    }
+
+    this.addEvent('touchstart', touchStart);    
+    this.addEvent('touchmove', touchMove);
+    
+    var swipeAddedEvents = {};
+    swipeAddedEvents[fn] = {
+      'touchstart' : touchStart,
+      'touchmove'  : touchMove
+    };
+    this.store('swipeAddedEvents', swipeAddedEvents);
+  },
+  
+  onRemove: function(fn){
+    $H(this.retrieve('swipeAddedEvents')[fn]).each(function(v,k){
+      this.removeEvent(k,v);
+    }, this);
   }
 };
 
