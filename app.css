@@ -40,6 +40,12 @@ body {
   color:#222;
 }
 
+a {
+  color:white;
+  text-decoration:none;
+  text-shadow:0 1px 1px rgba(0,0,0,0.6);
+}
+
 
 #outer {
   -webkit-transition: -webkit-transform 0.4s ease-in-out;  
@@ -66,13 +72,24 @@ body {
     width:758px;    
   }
 
+.propper-width {
+  margin-left:-10px;  
+  padding:10px 30px 10px 40px;  
+}
+.horizontal-orientation .propper-width {
+  width:965px;
+}
+.vertical-orientation .propper-width {
+  width:698px;
+}
+
 h1 {
   position:relative;
   background: -webkit-gradient(linear, 0% 0%, 0% 80%, from(rgba(255,255,255,0.1)), to(rgba(255,255,255,0.0))),rgba(0,0,0,0.1);
-  margin-left:-10px;
+
   font-weight:bold;
   font-size:22px;
-  padding:10px 30px 10px 40px;
+
   
   color:#393939;
   text-shadow:0 1px rgba(255,255,255,0.7), 0 0 20px rgba(255,255,255,0.4);
@@ -80,12 +97,7 @@ h1 {
   border-bottom:1px solid rgba(0,0,0,0.45);
   -webkit-box-shadow: 0 1px 0 rgba(255,255,255,0.5);
 }
-  .horizontal-orientation h1 {
-    width:965px;
-  }
-  .vertical-orientation h1 {
-    width:698px;
-  }
+
   
   
 .button {
@@ -133,6 +145,7 @@ h1 {
   border:3px solid #f0f0f0;  
   -webkit-border-radius: 3px;
   -webkit-box-shadow:0 4px 7px rgba(0,0,0,0.4), 0 0 1px black;
+  -webkit-tap-highlight-color:transparent;  
 }
   .horizontal-orientation #gallery .thumb {
     margin: 0 18px 30px 18px;
@@ -250,5 +263,15 @@ ol {
 
 
 #footer {
+  background: -webkit-gradient(linear, 0% 0%, 0% 80%, from(rgba(255,255,255,0.1)), to(rgba(255,255,255,0.0))),rgba(0,0,0,0.1);
   display:none;
+  border-top:1px solid rgba(0,0,0,0.3);
+  font-size:14px;
+  color:rgba(0,0,0,0.7);
 }
+
+
+#social-media-guru {
+  float:right;
+}
+
