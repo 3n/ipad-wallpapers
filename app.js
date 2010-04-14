@@ -146,7 +146,7 @@ window.addEvent('domready', function(){
       );
       
       $('photo-count').set('html', resp.photoset.photo.length + ' photos');
-
+      $('footer').setStyle('display','block');
       new iPadGallery(
         $('outer'), 
         $('gallery'), 
