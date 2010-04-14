@@ -263,18 +263,30 @@ ol {
 
 
 #footer {
-  background: rgba(0,0,0,0.2);
+/*  background: -webkit-gradient(linear, 0% 0%, 0% 60%, from(rgba(255,255,255,0.2)), to(rgba(255,255,255,0.0)));*/
   display:none;
-  border-top:1px solid rgba(0,0,0,0.3);
+  border-top:1px solid rgba(0,0,0,0.2);
   font-size:14px;
   color:rgba(0,0,0,0.6);
 }
 
-
-#social-media-guru {
+#footer-right {
   float:right;
+  width:265px;
+  border-left:1px solid rgba(0,0,0,0.2);
+  margin-top:-10px;
+  padding:10px 0 10px 10px;
+}
+#footer-right > * {
+  float:left;
+  display:block;
+  margin-bottom:8px;
+  line-height:1.3em;
+}
+#footer-right span {
+  padding-left:2px;
 }
 
 #ninjacam-plug img {
-  margin-bottom:-10px;
+  margin-bottom:-9px;
 }
