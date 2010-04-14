@@ -203,8 +203,16 @@ ol {
 }
 
 .gesture-hint {
-  font-weight:bold;
-  margin-right:5px;
+  margin-right:1px;
+  
+  padding:1px 5px 5px 6px;
+  background:rgba(0,0,0,0.2);
+  -webkit-box-shadow: 0 1px 1px rgba(255,255,255,0.4);
+  -webkit-border-radius:6px;
+  border-top:2px solid rgba(0,0,0,0.1);
+  
+  color:white;
+  text-shadow:0 1px 1px rgba(0,0,0,0.7);
 }
 
 .spinner {
