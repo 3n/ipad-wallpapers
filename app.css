@@ -95,7 +95,7 @@ h1 {
 #gallery {
   background: -webkit-gradient(linear, 0% 0%, 0% 20%, from(rgba(255,255,255,0.3)), to(rgba(255,255,255,0.0)));
   overflow:auto;
-  padding:20px 15px 0 15px;
+  padding:30px 15px 0 15px;
 }
   .vertical-orientation #gallery {
     margin-left:-10px;
