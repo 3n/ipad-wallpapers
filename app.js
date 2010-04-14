@@ -144,6 +144,8 @@ window.addEvent('domready', function(){
           return "<img src='http://farm{farm}.static.flickr.com/{server}/{id}_{secret}_t.jpg'/>".substitute(photo);
         }).reverse()
       );
+      
+      $('photo-count').set('html', resp.photoset.photo.length + ' photos');
 
       new iPadGallery(
         $('outer'), 

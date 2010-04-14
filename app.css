@@ -67,11 +67,12 @@ body {
   }
 
 h1 {
+  position:relative;
   background: -webkit-gradient(linear, 0% 0%, 0% 80%, from(rgba(255,255,255,0.1)), to(rgba(255,255,255,0.0))),rgba(0,0,0,0.1);
   margin-left:-10px;
   font-weight:bold;
-  font-size:25px;
-  padding:10px 0 10px 40px;
+  font-size:22px;
+  padding:10px 30px 10px 40px;
   
   color:#393939;
   text-shadow:0 1px rgba(255,255,255,0.7), 0 0 20px rgba(255,255,255,0.4);
@@ -80,11 +81,42 @@ h1 {
   -webkit-box-shadow: 0 1px 0 rgba(255,255,255,0.5);
 }
   .horizontal-orientation h1 {
-    width:995px;
+    width:965px;
   }
   .vertical-orientation h1 {
-    width:728px;
+    width:698px;
   }
+  
+  
+.button {
+  padding:5px 6px;
+  color:#fff;
+  text-decoration:none;
+  text-shadow: 0 -1px rgba(0,0,0,0.6);
+  -webkit-border-radius:3px;
+  border-top:1px solid rgba(255,255,255,0.6);
+  -webkit-box-shadow:0 2px 6px rgba(0,0,0,0.2), 0 0 2px black;
+  background:-webkit-gradient(linear, 0% 0%, 0% 100%, from(rgba(0,0,0,0)), to(rgba(0,0,0,0.3))),
+             -webkit-gradient(linear, 0% 0%, 0% 100%, from(rgba(255,255,255,0.1)), to(rgba(0,0,0,0)));  
+}
+  
+.top-button {
+  font-size:13px;  
+  display:block;
+  float:right;
+  margin-right:10px;
+}
+  
+#rss-button {
+  background-color: #FF525D;
+}
+#twitter-button {
+  background-color: #63B8F8;
+}
+#photo-count {
+  font-weight:normal;
+  margin-top:6px;
+}
 
 #gallery {
   background: -webkit-gradient(linear, 0% 0%, 0% 20%, from(rgba(255,255,255,0.3)), to(rgba(255,255,255,0.0)));
@@ -152,7 +184,7 @@ ol {
 }
 
 .dark-engraved {
-  color:rgba(0,0,0,0.6);
+  color:rgba(0,0,0,0.7);
   text-shadow:0 1px 1px white;
 }
 
