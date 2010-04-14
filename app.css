@@ -67,15 +67,20 @@ body {
   }
 
 h1 {
+  background: -webkit-gradient(linear, 0% 0%, 0% 80%, from(rgba(255,255,255,0.1)), to(rgba(255,255,255,0.0))),
+              rgba(0,0,0,0.1);
   margin-left:-10px;
   font-weight:bold;
   font-size:25px;
-  padding:10px 0 10px 45px;
-  color:#3E3F41;
+  padding:10px 0 10px 40px;
+  
+  color:#343841;
   text-shadow:0 1px rgba(255,255,255,0.7), 0 0 20px rgba(255,255,255,0.4);
   
-  margin-bottom:20px;
-  border-bottom:1px solid rgba(0,0,0,0.5);
+/*  color:#fff;
+  text-shadow:0 -1px 1px rgba(0,0,0,0.9), 0 0 20px rgba(255,255,255,0.4);*/
+  
+  border-bottom:1px solid rgba(0,0,0,0.45);
   -webkit-box-shadow: 0 1px 0 rgba(255,255,255,0.5);
   
 /*  text-align:center;*/
@@ -88,17 +93,27 @@ h1 {
   }
 
 #gallery {
+  background: -webkit-gradient(linear, 0% 0%, 0% 20%, from(rgba(255,255,255,0.3)), to(rgba(255,255,255,0.0)));
   overflow:auto;
-  padding: 0 15px;
+  padding:20px 15px 0 15px;
 }
+  .vertical-orientation #gallery {
+    margin-left:-10px;
+    padding-left:18px;
+  }
 
 #gallery .thumb {
   float:left;
-  margin: 0 18px 30px 18px;
   border:3px solid #f0f0f0;  
   -webkit-border-radius: 3px;
   -webkit-box-shadow:0 4px 7px rgba(0,0,0,0.4);
 }
+  .horizontal-orientation #gallery .thumb {
+    margin: 0 18px 30px 18px;
+  }
+  .vertical-orientation #gallery .thumb {
+    margin: 0 20px 30px 20px;
+  }
 
 #showcase-wrapper {
   padding:10px;
