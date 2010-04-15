@@ -190,7 +190,7 @@ window.addEvent('domready', function(){
     globalFunction : 'jsonFlickrApi',
     data : { photoset_id : '72157623678289231', 
              method      : 'flickr.photosets.getPhotos', 
-             api_key     : 'f31a8e4819faa5ec28ed3db580b76fb9',
+             api_key     : '56f667c230fe7c84c9286ac3eef0ab23',
              media       : 'photos',
              extras      : 'tags',             
              lang        : "en-us",
