@@ -86,7 +86,6 @@ a {
 h1 {
   position:relative;
   background: -webkit-gradient(linear, 0% 0%, 0% 80%, from(rgba(255,255,255,0.1)), to(rgba(255,255,255,0.0))),rgba(0,0,0,0.1);
-
   font-weight:bold;
   font-size:22px;
 
@@ -261,6 +260,7 @@ ol {
   border-top:1px solid rgba(0,0,0,0.2);
   font-size:14px;
   color:rgba(0,0,0,0.6);
+  overflow:auto;
 }
 
 #footer-right {
@@ -291,11 +291,33 @@ body.no-touch {
   background:#ddd;
 }
 
-body.no-touch .wrapper {
+body.no-touch #wrapper {
   margin:20px auto;
-  overflow:hidden;
+/*  overflow:hidden;*/
   border: 1px solid  rgba(0,0,0,0.3);
   -webkit-box-shadow:0 0 5px rgba(0,0,0,0.5), 0 0 1px white;
   -webkit-border-radius: 8px;
   background-image: url('bg_texture.png');
 }
+
+body.no-touch #showcase-wrapper, body.no-touch .showcase-image {
+  max-width:700px;
+  max-height:700px;
+}
+
+body.no-touch #tap-to-return, body.no-touch #showcase-instructions {
+  display:none;
+}
+
+#click-to-return {
+  font-size:14px;  
+  display:none;
+  text-align:center;
+  margin-top:20px;
+}
+body.no-touch #click-to-return {
+  display:block;
+}
+
+
+

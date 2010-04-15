@@ -15,7 +15,8 @@ var iPadGallery = new Class({
     },
     showcaseImageClass : 'showcase-image',
     photosSelector : 'img',
-    preload : true
+    preload : true,
+    touchEvent : 'tap'
   },
   
   current_index : 0,
@@ -32,6 +33,8 @@ var iPadGallery = new Class({
     
     this.setPhotos();
     this.attach();
+    
+    return this;
   },
   
   setPhotos: function(photos){
@@ -39,7 +42,7 @@ var iPadGallery = new Class({
 
     this.photos.each(function(photo, i){      
       this.fireEvent('photoAdded', photo);
-      photo.addEvent('tap', function(){
+      photo.addEvent(this.options.touchEvent, function(){
         this.fireEvent('photoTapped', photo);
         this.current_index = i;
         this.updateShowcaseImage();
@@ -53,19 +56,12 @@ var iPadGallery = new Class({
     var thiz = this;
     
     this.showcase_image_wrapper
-      .addEvent('tap', this.showGallery.bind(this))
+      .addEvent(this.options.touchEvent, this.showGallery.bind(this))
       .addEvent('swipe', function(info){
         if (info.direction === 'right')
-          this.current_index -= 1;
+          this.previous();
         else if (info.direction === 'left')
-          this.current_index += 1;
-        
-        if (this.current_index < 0)
-          this.current_index = 0;
-        else if (this.current_index > this.photos.length - 1)
-          this.current_index = this.photos.length - 1;
-        else
-          this.updateShowcaseImage(info.direction);
+          this.next();
       }.bind(this));
     
       this.showcase_image.addEvent('load', this._isLoaded.bind(this));
@@ -85,6 +81,7 @@ var iPadGallery = new Class({
   showGallery: function(){
     this.element.removeClass('right');
     this.showcase_element.setStyle.delay(500, this.showcase_element, ['display','none']);
+    return this;
   },
 
   updateShowcaseImage: function(dir){
@@ -95,13 +92,27 @@ var iPadGallery = new Class({
     if (this.showcase_image.complete) this._isLoaded();
     else this.showcase_image_wrapper.spin();
 
-    // this.preloadRight = this.preloadRight || new Element('img', {
-    //   'class' : this.options.showcaseImageClass, 
-    //   'style' : {visibility: 'hidden'}
-    // }).inject(document.body);
-    
-    // if (this.current_index < this.photos.length - 1)
-    //   this.preloadRight.set('src', this.options.getLargeSrc(this.photos[this.current_index + 1]));
+    this.fireEvent('showcaseUpdated', this);
+    return this;
+  },
+  
+  next: function(){
+    this.current_index += 1;
+    this._bounds_check();
+    return this;
+  },
+  previous: function(){
+    this.current_index -= 1;
+    this._bounds_check();
+    return this;
+  },
+  _bounds_check: function(){
+    if (this.current_index < 0)
+      this.current_index = 0;
+    else if (this.current_index > this.photos.length - 1)
+      this.current_index = this.photos.length - 1;
+    else
+      this.updateShowcaseImage();
   }
 });
 
@@ -155,11 +166,12 @@ window.addEvent('domready', function(){
       $('photo-count').set('html', resp.photoset.photo.length + ' photos');
       $('footer').setStyle('display','block');
       
-      new iPadGallery(
+      $3N.ipg = new iPadGallery(
         $('outer'), 
         $('gallery'), 
         $('showcase-wrapper'),
         {
+          touchEvent : $3N.touch ? 'tap' : 'click',
           onPhotoAdded : function(photo){
             photo.thumbnail(100,100,'thumb',100,100);
           },
@@ -169,6 +181,17 @@ window.addEvent('domready', function(){
           onShowcaseWillOpen : function(ipg){
             ipg.photos[ipg.current_index].unspin();
           },
+          onShowcaseUpdated : function(ipg){
+            if (!$3N.touch){
+              ipg.preloadRight = ipg.preloadRight || new Element('img', {
+                'class' : ipg.options.showcaseImageClass, 
+                'style' : {visibility: 'hidden'}
+              }).inject(document.body);
+
+              if (ipg.current_index < ipg.photos.length - 1)
+                ipg.preloadRight.set('src', ipg.options.getLargeSrc(ipg.photos[ipg.current_index + 1]));
+            }
+          },
           getLargeSrc : function(img){
             return img.get('src').replace(/_\w\.jpg/,'_b.jpg');
           },
@@ -177,6 +200,15 @@ window.addEvent('domready', function(){
           }
         }
       );
+      
+      $3N.keyboard = new Keyboard({
+        preventDefault : true,
+        events: {
+          'right' : $3N.ipg.next.bind($3N.ipg),
+          'left'  : $3N.ipg.previous.bind($3N.ipg),
+          'esc'   : $3N.ipg.showGallery.bind($3N.ipg)      
+        }
+      }).activate();
     }
   }).send();
 });
