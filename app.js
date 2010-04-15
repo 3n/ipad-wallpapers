@@ -137,7 +137,7 @@ function handle_orientation(){
 
 
 // domready
-window.addEvent('domready', function(){
+window.addEvent('domready', function(){  
   handle_orientation();
   window.addEvent('orientationchange', function(){
     window.scrollTo(0, window.getScroll().y);    
@@ -147,6 +147,13 @@ window.addEvent('domready', function(){
     $(document.body).addClass('no-touch');
   else
     $(document.body).addClass('touch');
+  
+  if (Browser.Engine.trident){
+    $('browser-message').setStyle('display','block').set('html', 'You are using Internet Explorer, there is no way you own an iPad.');
+    (function(){
+      $('browser-message').toggleClass('fffuuu');
+    }).periodical(100);
+  }
 
   new Request.JSONP({
     url : "http://api.flickr.com/services/rest/",
