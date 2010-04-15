@@ -123,9 +123,12 @@ function handle_orientation(){
 window.addEvent('domready', function(){
   handle_orientation();
   window.addEvent('orientationchange', function(){
-    window.scrollTo(0, window.getScroll().y);
+    window.scrollTo(0, window.getScroll().y);    
   });
-  
+
+  if (!navigator.userAgent.test(/AppleWebKit.+Mobile/))
+    $(document.body).addClass('no-touch');
+
   new Request.JSONP({
     url : "http://api.flickr.com/services/rest/",
     globalFunction : 'jsonFlickrApi',

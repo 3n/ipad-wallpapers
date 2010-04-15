@@ -283,3 +283,19 @@ ol {
 #ninjacam-plug img {
   margin-bottom:-9px;
 }
+
+
+
+
+body.no-touch {
+  background:#ddd;
+}
+
+body.no-touch .wrapper {
+  margin:20px auto;
+  overflow:hidden;
+  border: 1px solid  rgba(0,0,0,0.3);
+  -webkit-box-shadow:0 0 5px rgba(0,0,0,0.5), 0 0 1px white;
+  -webkit-border-radius: 8px;
+  background-image: url('bg_texture.png');
+}
