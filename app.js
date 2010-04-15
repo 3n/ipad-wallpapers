@@ -216,6 +216,7 @@ window.addEvent('domready', function(){
           },
           onPhotoTapped : function(photo){
             photo.spin();
+            $3N.trackEvent("Click", resp.photoset.photo[i].id, "photo");
           },
           onShowcaseWillOpen : function(ipg){
             ipg.photos[ipg.current_index].unspin();
@@ -236,9 +237,6 @@ window.addEvent('domready', function(){
                 preload.include(ipg.options.getLargeSrc(ipg.photos[ipg.current_index - 1]));              
               new Asset.images(preload);
             }
-          },
-          onPhotoTapped: function(photo, i){
-            $3N.trackEvent("Click", resp.photoset.photo[i].id, "photo");
           },
           getLargeSrc : function(img){
             return img.get('src').replace(/_\w\.jpg/,'_b.jpg');
