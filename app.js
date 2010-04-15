@@ -1,5 +1,28 @@
 $3N = {
-  touch : navigator.userAgent.test(/AppleWebKit.+Mobile/)
+  touch : navigator.userAgent.test(/AppleWebKit.+Mobile/),
+  trackEvent : function(category, action, label, value){    
+    if (typeof(pageTracker) == "object") pageTracker._trackEvent(category, action, label, value);
+    else if(typeof(_gaq) == "object") _gaq.push(['_trackEvent', category, action, label, value]);
+
+    if (console && console.log)
+      console.log($A(arguments).join(", "));
+  }
+};
+
+window.addEvent('domready', function() { $3N.dom_ready = true; });
+
+window.onerror = function(msg, url, linenumber){   
+	var handle_error = function(msg, url, linenumber) {
+		$3N.trackEvent(
+      "Error",
+      msg,
+      navigator.userAgent,
+      linenumber
+    );		
+	};
+
+	if ($3N.dom_ready) handle_error(msg, url, linenumber);
+	else							 window.addEvent('domready', handle_error.bind(window, [msg, url, linenumber]));
 };
 
 
@@ -43,7 +66,7 @@ var iPadGallery = new Class({
     this.photos.each(function(photo, i){      
       this.fireEvent('photoAdded', photo);
       photo.addEvent(this.options.touchEvent, function(){
-        this.fireEvent('photoTapped', photo);
+        this.fireEvent('photoTapped', [photo, i]);
         this.current_index = i;
         this.updateShowcaseImage();
       }.bind(this));      
@@ -157,6 +180,7 @@ window.addEvent('domready', function(){
   
   var failure = function(){
     $('loading-jsonp').set('html', "Load failed - try refreshing.");
+    $3N.trackEvent("Flickr", "failed");
   };
 
   new Request.JSONP({
@@ -212,6 +236,9 @@ window.addEvent('domready', function(){
                 preload.include(ipg.options.getLargeSrc(ipg.photos[ipg.current_index - 1]));              
               new Asset.images(preload);
             }
+          },
+          onPhotoTapped: function(photo, i){
+            $3N.trackEvent("Click", resp.photoset.photo[i].id, "photo");
           },
           getLargeSrc : function(img){
             return img.get('src').replace(/_\w\.jpg/,'_b.jpg');
