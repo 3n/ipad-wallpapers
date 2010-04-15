@@ -3,9 +3,6 @@ $3N = {
   trackEvent : function(category, action, label, value){    
     if (typeof(pageTracker) == "object") pageTracker._trackEvent(category, action, label, value);
     else if(typeof(_gaq) == "object") _gaq.push(['_trackEvent', category, action, label, value]);
-
-    if (console && console.log)
-      console.log($A(arguments).join(", "));
   }
 };
 
