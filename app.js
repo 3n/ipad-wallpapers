@@ -112,8 +112,10 @@ var iPadGallery = new Class({
         new_src = this.options.getLargeSrc(current_photo);
 
     this.showcase_image.set('src', new_src);    
-    if (this.showcase_image.complete) this._isLoaded();
-    else this.showcase_image_wrapper.spin();
+    if (this.showcase_image.complete) 
+      this._isLoaded();
+    else if (this.element.hasClass('right')) 
+      this.showcase_image_wrapper.spin();
 
     this.fireEvent('showcaseUpdated', this);
     return this;
