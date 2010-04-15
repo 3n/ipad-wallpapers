@@ -332,4 +332,11 @@ body.no-touch #outer.right {
   margin-left:-1400px;
 }
 
+body.no-touch #footer {
+  padding-bottom:0;
+}
 
+body.no-touch .propper-width {
+  margin-left:0px;  
+  width:954px;
+}
