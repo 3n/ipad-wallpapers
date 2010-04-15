@@ -214,7 +214,7 @@ window.addEvent('domready', function(){
           onPhotoAdded : function(photo){
             photo.thumbnail(100,100,'thumb',100,100);
           },
-          onPhotoTapped : function(photo){
+          onPhotoTapped : function(photo, i){
             photo.spin();
             $3N.trackEvent("Click", resp.photoset.photo[i].id, "photo");
           },
