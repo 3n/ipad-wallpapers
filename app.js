@@ -1,3 +1,8 @@
+$3N = {
+  touch : navigator.userAgent.test(/AppleWebKit.+Mobile/)
+};
+
+
 var iPadGallery = new Class({
   Implements: [Events, Options],
   
@@ -119,6 +124,7 @@ function handle_orientation(){
 }
 
 
+
 // domready
 window.addEvent('domready', function(){
   handle_orientation();
@@ -126,7 +132,7 @@ window.addEvent('domready', function(){
     window.scrollTo(0, window.getScroll().y);    
   });
 
-  if (!navigator.userAgent.test(/AppleWebKit.+Mobile/))
+  if (!$3N.touch)
     $(document.body).addClass('no-touch');
 
   new Request.JSONP({
@@ -148,6 +154,7 @@ window.addEvent('domready', function(){
       
       $('photo-count').set('html', resp.photoset.photo.length + ' photos');
       $('footer').setStyle('display','block');
+      
       new iPadGallery(
         $('outer'), 
         $('gallery'), 
