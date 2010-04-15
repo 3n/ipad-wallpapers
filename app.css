@@ -300,8 +300,12 @@ body.no-touch #wrapper {
   background-image: url('bg_texture.png');
 }
 
-body.no-touch #showcase-wrapper, body.no-touch .showcase-image {
+body.no-touch #showcase-wrapper  {
   max-width:600px;
+  max-height:600px;
+}
+body.no-touch .showcase-image {
+  max-width:800px;
   max-height:600px;
 }
 
@@ -325,7 +329,7 @@ body.no-touch #outer {
   -webkit-transition: margin 0.4s ease-in-out;  
 }
 body.no-touch #outer.right {
-  margin-left:-1200px;
+  margin-left:-1400px;
 }
 
 

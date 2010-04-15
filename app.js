@@ -185,13 +185,19 @@ window.addEvent('domready', function(){
           },
           onShowcaseUpdated : function(ipg){
             if (!$3N.touch){
-              ipg.preloadRight = ipg.preloadRight || new Element('img', {
-                'class' : ipg.options.showcaseImageClass, 
-                'style' : {visibility: 'hidden'}
-              }).inject(document.body);
-
+              // ipg.preloadRight = ipg.preloadRight || new Element('img', {
+              //   'class' : ipg.options.showcaseImageClass, 
+              //   'styles' : {visibility: 'hidden'}
+              // }).inject(document.body);
+              // 
+              // if (ipg.current_index < ipg.photos.length - 1)
+              //   ipg.preloadRight.set('src', ipg.options.getLargeSrc(ipg.photos[ipg.current_index + 1]));
+              var preload = [];
               if (ipg.current_index < ipg.photos.length - 1)
-                ipg.preloadRight.set('src', ipg.options.getLargeSrc(ipg.photos[ipg.current_index + 1]));
+                preload.include(ipg.options.getLargeSrc(ipg.photos[ipg.current_index + 1]));
+              if (ipg.current_index > 0)
+                preload.include(ipg.options.getLargeSrc(ipg.photos[ipg.current_index - 1]));              
+              new Asset.images(preload);
             }
           },
           getLargeSrc : function(img){
