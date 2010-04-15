@@ -51,10 +51,10 @@ body.touch #outer {
   -webkit-transition: -webkit-transform 0.4s ease-in-out;  
   -webkit-transform: translate3d(0,0,0);
 }
-body.touch .vertical-orientation #outer.right {
+body.touch.vertical-orientation #outer.right {
   -webkit-transform: translate3d(-768px,0,0);
 }
-body.touch .horizontal-orientation #outer.right {
+body.touch.horizontal-orientation #outer.right {
   -webkit-transform: translate3d(-1024px,0,0);
 }
 
