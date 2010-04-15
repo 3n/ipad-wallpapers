@@ -11,7 +11,7 @@ fix the top left loader on click of gallery pic
 
 permalink #photo_id
 
-make it all work for normal computers too - click events and use tween to do the left pan thing (or just use thelouvre)
+add analytics that show clicks on each gallery item
 
 
 POST LAUNCH
