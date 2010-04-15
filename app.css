@@ -169,6 +169,12 @@ h1 {
   .vertical-orientation #gallery .thumb {
     margin: 0 20px 30px 20px;
   }
+  
+#loading-jsonp {
+  text-align:center;
+  font-size:18px;
+  padding:10px 0 40px 0;
+}
 
 #showcase-wrapper {
   padding:10px;
@@ -266,8 +272,6 @@ ol {
 
 
 #footer {
-/*  background: -webkit-gradient(linear, 0% 0%, 0% 60%, from(rgba(255,255,255,0.2)), to(rgba(255,255,255,0.0)));*/
-  display:none;
   border-top:1px solid rgba(0,0,0,0.2);
   font-size:14px;
   color:rgba(0,0,0,0.6);

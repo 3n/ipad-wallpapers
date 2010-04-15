@@ -154,6 +154,10 @@ window.addEvent('domready', function(){
       $('browser-message').toggleClass('fffuuu');
     }).periodical(100);
   }
+  
+  var failure = function(){
+    $('loading-jsonp').set('html', "Load failed - try refreshing.");
+  };
 
   new Request.JSONP({
     url : "http://api.flickr.com/services/rest/",
@@ -165,7 +169,10 @@ window.addEvent('domready', function(){
              extras      : 'tags',             
              lang        : "en-us",
 						 format      : 'json' },
-    onComplete: function(resp){
+    onComplete: function(resp){   
+      if (resp.stat === 'fail')
+        return failure();
+
       $('gallery').set('html',
         resp.photoset.photo.map(function(photo){
           return "<img src='http://farm{farm}.static.flickr.com/{server}/{id}_{secret}_t.jpg'/>".substitute(photo);
@@ -173,7 +180,6 @@ window.addEvent('domready', function(){
       );
       
       $('photo-count').set('html', resp.photoset.photo.length + ' photos');
-      $('footer').setStyle('display','block');
       
       $3N.ipg = new iPadGallery(
         $('outer'), 
@@ -224,6 +230,7 @@ window.addEvent('domready', function(){
           'esc'   : $3N.ipg.showGallery.bind($3N.ipg)      
         }
       }).activate();
-    }
+    },
+    onFailure: failure
   }).send();
 });
