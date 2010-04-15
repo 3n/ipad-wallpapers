@@ -47,14 +47,14 @@ a {
 }
 
 
-#outer {
+body.touch #outer {
   -webkit-transition: -webkit-transform 0.4s ease-in-out;  
   -webkit-transform: translate3d(0,0,0);
 }
-.vertical-orientation #outer.right {
+body.touch .vertical-orientation #outer.right {
   -webkit-transform: translate3d(-768px,0,0);
 }
-.horizontal-orientation #outer.right {
+body.touch .horizontal-orientation #outer.right {
   -webkit-transform: translate3d(-1024px,0,0);
 }
 
@@ -301,8 +301,8 @@ body.no-touch #wrapper {
 }
 
 body.no-touch #showcase-wrapper, body.no-touch .showcase-image {
-  max-width:700px;
-  max-height:700px;
+  max-width:600px;
+  max-height:600px;
 }
 
 body.no-touch #tap-to-return, body.no-touch #showcase-instructions {
@@ -319,5 +319,13 @@ body.no-touch #click-to-return {
   display:block;
 }
 
+
+
+body.no-touch #outer {
+  -webkit-transition: margin 0.4s ease-in-out;  
+}
+body.no-touch #outer.right {
+  margin-left:-1200px;
+}
 
 

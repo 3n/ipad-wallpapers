@@ -145,6 +145,8 @@ window.addEvent('domready', function(){
 
   if (!$3N.touch)
     $(document.body).addClass('no-touch');
+  else
+    $(document.body).addClass('touch');
 
   new Request.JSONP({
     url : "http://api.flickr.com/services/rest/",
