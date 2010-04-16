@@ -1,5 +1,6 @@
 $3N = {
-  touch : navigator.userAgent.test(/AppleWebKit.+Mobile/),
+  params : document.location.search.replace('?','').parseQueryString(),
+  touch  : navigator.userAgent.test(/AppleWebKit.+Mobile/),
   trackEvent : function(category, action, label, value){    
     if (typeof(pageTracker) == "object") pageTracker._trackEvent(category, action, label, value);
     else if(typeof(_gaq) == "object") _gaq.push(['_trackEvent', category, action, label, value]);
@@ -164,13 +165,13 @@ window.addEvent('domready', function(){
   window.addEvent('orientationchange', function(){
     window.scrollTo(0, window.getScroll().y);    
   });
-
+  
   if (!$3N.touch)
     $(document.body).addClass('no-touch');
   else
     $(document.body).addClass('touch');
   
-  if (Browser.Engine.trident){
+  if (Browser.Engine.trident || $3N.params.ie){
     $('browser-message').setStyle('display','block').set('html', 'You are using Internet Explorer, there is no way you own an iPad.');
     (function(){
       $('browser-message').toggleClass('fffuuu');
