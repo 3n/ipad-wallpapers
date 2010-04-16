@@ -198,6 +198,7 @@ h1 {
 }
 .horizontal-orientation .showcase-image {
   max-width:974px;
+  max-height:450px;
 }
 
 ol {
