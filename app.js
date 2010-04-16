@@ -186,7 +186,7 @@ window.addEvent('domready', function(){
   new Request.JSONP({
     url : "http://api.flickr.com/services/rest/",
     globalFunction : 'jsonFlickrApi',
-    data : { photoset_id : '72157623678289231', 
+    data : { photoset_id : $3N.params.photoset_id || '72157623678289231', 
              method      : 'flickr.photosets.getPhotos', 
              api_key     : '56f667c230fe7c84c9286ac3eef0ab23',
              media       : 'photos',
