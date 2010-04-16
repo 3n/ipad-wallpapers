@@ -121,7 +121,7 @@ var iPadGallery = new Class({
     else if (this.element.hasClass('right')) 
       this.showcase_image_wrapper.spin();
 
-    this.fireEvent('showcaseUpdated', this);
+    this.fireEvent('showcaseUpdated', [this, this.current_index]);
     return this;
   },
   
@@ -221,15 +221,16 @@ window.addEvent('domready', function(){
             photo.thumbnail(100,100,'thumb',100,100);
           },
           onPhotoTapped : function(photo, i){
-            photo.spin();
-            var id = resp.photoset.photo[i].id;
-            document.location.hash = id;
-            $3N.trackEvent("Click", id, "photo");
+            photo.spin();            
+            $3N.trackEvent("Click", resp.photoset.photo[i].id, "photo");
           },
           onShowcaseWillOpen : function(ipg){
             ipg.photos[ipg.current_index].unspin();
           },
-          onShowcaseUpdated : function(ipg){
+          onShowcaseUpdated : function(ipg, i){
+            var id = resp.photoset.photo[i].id;
+            document.location.hash = id;
+            
             if (!$3N.touch){
               // ipg.preloadRight = ipg.preloadRight || new Element('img', {
               //   'class' : ipg.options.showcaseImageClass, 
@@ -264,6 +265,7 @@ window.addEvent('domready', function(){
           if (photo.id === clean_hash)
             $3N.ipg.showPhoto(i);
         });
+        $3N.trackEvent("HashUrl", clean_hash);
       }
         
       (function(){
