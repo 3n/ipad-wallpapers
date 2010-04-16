@@ -212,11 +212,6 @@ ol {
   padding:0;
 }
 
-#tap-to-return {
-  font-size:14px;
-  margin-left:40px;
-}
-
 .gesture-hint {
   margin-right:1px;
   
@@ -327,19 +322,38 @@ body.no-touch .showcase-image {
   max-height:600px;
 }
 
+#tap-to-return {
+  margin-left:40px;
+}
+
 body.no-touch #tap-to-return, body.no-touch #showcase-instructions {
   display:none;
 }
 
-#click-to-return {
+#ui-instructions {
   font-size:14px;  
+  margin-top:20px;  
+  position:relative;
+  margin-left:15px;
+}
+
+#click-to-return {
   display:none;
   text-align:center;
-  margin-top:20px;
 }
 body.no-touch #click-to-return {
   display:block;
 }
+
+#view-on-flickr {
+  right:0;
+  top:0;
+  position:absolute;
+  font-size:14px;
+}
+  .touch #view-on-flickr {
+    right:25px;
+  }
 
 
 

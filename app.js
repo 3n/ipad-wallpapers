@@ -202,14 +202,16 @@ window.addEvent('domready', function(){
     onComplete: function(resp){   
       if (resp.stat === 'fail')
         return failure();
+        
+      var resp_photos = resp.photoset.photo.reverse();
 
       $('gallery').set('html',
-        resp.photoset.photo.map(function(photo){
+        resp_photos.map(function(photo){
           return "<img src='http://farm{farm}.static.flickr.com/{server}/{id}_{secret}_t.jpg'/>".substitute(photo);
-        }).reverse()
+        })
       );
       
-      $('photo-count').set('html', resp.photoset.photo.length + ' photos');
+      $('photo-count').set('html', resp_photos.length + ' photos');
       
       $3N.ipg = new iPadGallery(
         $('outer'), 
@@ -222,14 +224,16 @@ window.addEvent('domready', function(){
           },
           onPhotoTapped : function(photo, i){
             photo.spin();            
-            $3N.trackEvent("Click", resp.photoset.photo[i].id, "photo");
+            $3N.trackEvent("Click", resp_photos[i].id, "photo");
           },
           onShowcaseWillOpen : function(ipg){
             ipg.photos[ipg.current_index].unspin();
           },
           onShowcaseUpdated : function(ipg, i){
-            var id = resp.photoset.photo[i].id;
+            var id = resp_photos[i].id;
             document.location.hash = id;
+            
+            $('view-on-flickr').set('href', "http://www.flickr.com/photos/3n/" + id);
             
             if (!$3N.touch){
               // ipg.preloadRight = ipg.preloadRight || new Element('img', {
@@ -261,7 +265,7 @@ window.addEvent('domready', function(){
       
       var clean_hash = document.location.hash.replace('#','');
       if (clean_hash.length > 0){
-        resp.photoset.photo.each(function(photo, i){
+        resp_photos.each(function(photo, i){
           if (photo.id === clean_hash)
             $3N.ipg.showPhoto(i);
         });
