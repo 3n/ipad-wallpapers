@@ -65,8 +65,7 @@ var iPadGallery = new Class({
       this.fireEvent('photoAdded', photo);
       photo.addEvent(this.options.touchEvent, function(){
         this.fireEvent('photoTapped', [photo, i]);
-        this.current_index = i;
-        this.updateShowcaseImage();
+        this.showPhoto(i);
       }.bind(this));      
     }, this);
     
@@ -99,9 +98,16 @@ var iPadGallery = new Class({
     this.element.addClass.delay(200, this.element, 'right');
   },
   
+  showPhoto: function(i){
+    this.current_index = i;
+    this.updateShowcaseImage();
+    return this;
+  },
+  
   showGallery: function(){
     this.element.removeClass('right');
     this.showcase_element.setStyle.delay(500, this.showcase_element, ['display','none']);
+    this.fireEvent('galleryWillShow', this);
     return this;
   },
 
@@ -216,7 +222,9 @@ window.addEvent('domready', function(){
           },
           onPhotoTapped : function(photo, i){
             photo.spin();
-            $3N.trackEvent("Click", resp.photoset.photo[i].id, "photo");
+            var id = resp.photoset.photo[i].id;
+            document.location.hash = id;
+            $3N.trackEvent("Click", id, "photo");
           },
           onShowcaseWillOpen : function(ipg){
             ipg.photos[ipg.current_index].unspin();
@@ -238,6 +246,9 @@ window.addEvent('domready', function(){
               new Asset.images(preload);
             }
           },
+          onGalleryWillShow: function(){
+            document.location.hash = "";
+          },
           getLargeSrc : function(img){
             return img.get('src').replace(/_\w\.jpg/,'_b.jpg');
           },
@@ -247,6 +258,15 @@ window.addEvent('domready', function(){
         }
       );
       
+      var clean_hash = document.location.hash.replace('#','');
+      if (clean_hash.length > 0){
+        resp.photoset.photo.each(function(photo, i){
+          if (photo.id === clean_hash)
+            $3N.ipg.showPhoto(i);
+        });
+      }
+        
+      (function(){
       $3N.keyboard = new Keyboard({
         preventDefault : true,
         events: {
@@ -255,6 +275,7 @@ window.addEvent('domready', function(){
           'esc'   : $3N.ipg.showGallery.bind($3N.ipg)      
         }
       }).activate();
+      }).delay(1000);
     },
     onFailure: failure
   }).send();
