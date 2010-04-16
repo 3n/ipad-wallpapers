@@ -339,7 +339,6 @@ body.no-touch #tap-to-return, body.no-touch #showcase-instructions {
 
 #click-to-return {
   display:none;
-  text-align:center;
 }
 body.no-touch #click-to-return {
   display:block;
