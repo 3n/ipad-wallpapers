@@ -334,8 +334,10 @@ body.no-touch #tap-to-return, body.no-touch #showcase-instructions {
   font-size:14px;  
   margin-top:20px;  
   position:relative;
-  margin-left:15px;
 }
+  .no-touch #ui-instructions {
+    margin-left:15px;
+  }
 
 #click-to-return {
   display:none;
